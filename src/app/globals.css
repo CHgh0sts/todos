@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Timeline de base - cartes cachées par défaut */
+.timeline-card {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.timeline-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.timeline-point {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 0.3s ease;
+}
+
+.animate-timeline-ball {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Effet de pulsation pour les points de la timeline */
+@keyframes timeline-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+}
+
+.timeline-point.active {
+  opacity: 1;
+  transform: scale(1);
+  animation: timeline-pulse 2s infinite;
+}
+
+/* Effet de brillance pour les cartes révélées */
+@keyframes card-shine {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.timeline-card.revealed {
+  opacity: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.timeline-card.revealed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: card-shine 2s ease-in-out;
+  pointer-events: none;
+}
+
+/* Points de la timeline */
+.timeline-point {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive pour mobile */
+@media (max-width: 768px) {
+  .timeline-step {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .timeline-step .w-1\/2 {
+    width: 100%;
+    padding: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .timeline-point {
+    position: relative;
+    margin: 1rem 0;
+  }
+  
+  .animate-timeline-ball {
+    display: none; /* Masquer la bille sur mobile pour éviter les problèmes */
+  }
+} 

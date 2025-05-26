@@ -1,0 +1,173 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     Int             @id @default(autoincrement())
+  email                  String          @unique
+  name                   String
+  password               String
+  isVerified             Boolean         @default(false)
+  verificationToken      String?         @unique
+  verificationExpires    DateTime?
+  theme                  String          @default("system") // system, light, dark
+  todos                  Todo[]
+  categories             Category[]
+  projects               Project[]
+  sharedProjects         ProjectShare[]  @relation("SharedProjects")
+  ownedShares            ProjectShare[]  @relation("ProjectOwner")
+  sentInvitations        Invitation[]    @relation("InvitationSender")
+  receivedInvitations    Invitation[]    @relation("InvitationReceiver")
+  notifications          Notification[]
+  // Relations pour le système d'amis
+  sentFriendRequests     FriendRequest[] @relation("FriendRequestSender")
+  receivedFriendRequests FriendRequest[] @relation("FriendRequestReceiver")
+  friendsAsUser1         Friendship[]    @relation("User1")
+  friendsAsUser2         Friendship[]    @relation("User2")
+  // Relations pour les liens de partage
+  shareLinks             ShareLink[]     @relation("ShareLinkCreator")
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+}
+
+model Project {
+  id          Int            @id @default(autoincrement())
+  name        String
+  description String?
+  color       String         @default("#3B82F6")
+  emoji       String         @default("📁")
+  userId      Int
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  todos       Todo[]
+  categories  Category[]
+  shares      ProjectShare[]
+  shareLinks  ShareLink[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model ProjectShare {
+  id         Int      @id @default(autoincrement())
+  projectId  Int
+  userId     Int
+  ownerId    Int
+  permission String   @default("view") // view, edit, admin
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user       User     @relation("SharedProjects", fields: [userId], references: [id], onDelete: Cascade)
+  owner      User     @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([projectId, userId])
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  color     String   @default("#3B82F6")
+  emoji     String   @default("📁")
+  userId    Int
+  projectId Int?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  todos     Todo[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Todo {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  completed   Boolean   @default(false)
+  priority    String    @default("medium") // low, medium, high
+  dueDate     DateTime?
+  userId      Int
+  projectId   Int
+  categoryId  Int?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Invitation {
+  id         Int      @id @default(autoincrement())
+  projectId  Int
+  senderId   Int
+  receiverId Int
+  email      String
+  permission String   @default("view") // view, edit, admin
+  status     String   @default("pending") // pending, accepted, rejected
+  message    String?
+  sender     User     @relation("InvitationSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User?    @relation("InvitationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([projectId, email])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String // project_shared, todo_updated, invitation_received, etc.
+  title     String
+  message   String
+  data      String? // JSON data pour des infos supplémentaires
+  read      Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Système d'amis
+model FriendRequest {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  status     String   @default("pending") // pending, accepted, rejected
+  message    String?
+  sender     User     @relation("FriendRequestSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("FriendRequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([senderId, receiverId])
+}
+
+model Friendship {
+  id        Int      @id @default(autoincrement())
+  user1Id   Int
+  user2Id   Int
+  user1     User     @relation("User1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2     User     @relation("User2", fields: [user2Id], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([user1Id, user2Id])
+}
+
+// Liens de partage pour les projets
+model ShareLink {
+  id         String    @id @default(cuid())
+  projectId  Int
+  userId     Int // Créateur du lien
+  permission String    @default("view") // view, edit, admin
+  expiresAt  DateTime?
+  maxUses    Int?
+  usedCount  Int       @default(0)
+  active     Boolean   @default(true)
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user       User      @relation("ShareLinkCreator", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
