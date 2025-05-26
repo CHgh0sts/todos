@@ -40,9 +40,9 @@ export default function VerifyPage() {
         if (response.ok) {
           setStatus('success')
           setMessage(data.message)
-          // Rediriger vers la page de connexion après 3 secondes
+          // Rediriger vers la page de connexion après 3 secondes avec le message de succès
           setTimeout(() => {
-            router.push('/auth/login')
+            router.push('/auth/login?message=verified')
           }, 3000)
         } else {
           setStatus('error')

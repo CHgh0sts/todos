@@ -37,8 +37,13 @@ export default function RegisterPage() {
       const result = await register(name, email, password)
       
       if (result.success) {
-        // La gestion du token et du toast est déjà faite dans le contexte
-        router.push('/projects')
+        // Rediriger vers la page de connexion avec un message
+        if (result.emailSent) {
+          router.push('/auth/login?message=verify-email')
+        } else {
+          // Si l'email n'a pas pu être envoyé, rediriger vers la page de connexion avec un message d'erreur
+          router.push('/auth/login?message=email-error')
+        }
       } else {
         setError(result.error || 'Erreur lors de l\'inscription')
       }

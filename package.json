@@ -11,7 +11,8 @@
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
     "db:seed": "node prisma/seed.js",
-    "db:seed-collab": "node prisma/seed-collaboration.js"
+    "db:seed-collab": "node prisma/seed-collaboration.js",
+    "test:email": "node scripts/test-email.js"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",

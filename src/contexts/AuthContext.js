@@ -96,15 +96,30 @@ export function AuthProvider({ children }) {
       const data = await response.json()
 
       if (response.ok) {
-        Cookies.set('token', data.token, { expires: 7 })
-        setUser(data.user)
-        toast.success('Inscription réussie !')
-        return { success: true, user: data.user, token: data.token }
+        // L'inscription a réussi, mais l'utilisateur doit vérifier son email
+        // On ne définit pas de token car le compte n'est pas encore vérifié
+        
+        if (data.emailSent) {
+          toast.success('Inscription réussie ! Vérifiez votre email pour activer votre compte.')
+        } else {
+          toast.success(data.message, { duration: 6000 })
+          if (data.warning) {
+            toast.error(data.supportMessage, { duration: 8000 })
+          }
+        }
+        
+        return { 
+          success: true, 
+          emailSent: data.emailSent,
+          message: data.message,
+          userId: data.userId
+        }
       } else {
         toast.error(data.error || 'Erreur d\'inscription')
         return { success: false, error: data.error }
       }
     } catch (error) {
+      console.error('Erreur lors de l\'inscription:', error)
       toast.error('Erreur d\'inscription')
       return { success: false, error: 'Erreur d\'inscription' }
     }

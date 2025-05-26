@@ -66,25 +66,44 @@ echo 'JWT_SECRET="votre_jwt_secret_securise"' >> .env
 echo 'NODE_ENV="development"' >> .env
 ```
 
-4. **Appliquer les migrations**
+4. **Configurer l'envoi d'emails** (optionnel mais recommandé)
+
+```bash
+# Ajouter la configuration SMTP à votre .env
+echo 'SMTP_HOST="smtp.gmail.com"' >> .env
+echo 'SMTP_PORT="465"' >> .env
+echo 'SMTP_USER="votre-email@gmail.com"' >> .env
+echo 'SMTP_PASS="votre-mot-de-passe-application"' >> .env
+echo 'NEXT_PUBLIC_APP_URL="http://localhost:3000"' >> .env
+```
+
+**Note** : Pour Gmail, utilisez un [mot de passe d'application](https://support.google.com/accounts/answer/185833) au lieu de votre mot de passe principal.
+
+**Tester la configuration email** :
+
+```bash
+npm run test:email votre@email.com
+```
+
+5. **Appliquer les migrations**
 
 ```bash
 npx prisma migrate dev
 ```
 
-5. **Générer le client Prisma**
+6. **Générer le client Prisma**
 
 ```bash
 npx prisma generate
 ```
 
-6. **Peupler avec des données de test** (optionnel)
+7. **Peupler avec des données de test** (optionnel)
 
 ```bash
 npm run db:seed
 ```
 
-7. **Démarrer le serveur de développement**
+8. **Démarrer le serveur de développement**
 
 ```bash
 npm run dev
