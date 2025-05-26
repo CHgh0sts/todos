@@ -18,9 +18,9 @@ export async function PUT(request, { params }) {
     }
     
     const userId = decoded.userId
-    const { action } = await request.json() // 'accept' ou 'decline'
+    const { action } = await request.json() // 'accept' ou 'reject'
 
-    if (!['accept', 'decline'].includes(action)) {
+    if (!['accept', 'reject'].includes(action)) {
       return NextResponse.json({ error: 'Action invalide' }, { status: 400 })
     }
 
@@ -34,6 +34,13 @@ export async function PUT(request, { params }) {
       include: {
         project: true,
         sender: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        receiver: {
           select: {
             id: true,
             name: true,
@@ -54,17 +61,17 @@ export async function PUT(request, { params }) {
         await tx.invitation.update({
           where: { id: parseInt(id) },
           data: { 
-            status: 'accepted',
-            respondedAt: new Date()
+            status: 'accepted'
           }
         })
 
-        // Ajouter l'utilisateur au projet
-        await tx.projectMember.create({
+        // Ajouter l'utilisateur au projet via ProjectShare
+        await tx.projectShare.create({
           data: {
             projectId: invitation.projectId,
             userId: userId,
-            role: 'member'
+            ownerId: invitation.senderId,
+            permission: invitation.permission
           }
         })
 
@@ -75,10 +82,10 @@ export async function PUT(request, { params }) {
             type: 'invitation_accepted',
             title: 'Invitation acceptée',
             message: `${invitation.receiver?.name || 'Un utilisateur'} a accepté votre invitation pour le projet "${invitation.project.name}"`,
-            data: {
+            data: JSON.stringify({
               projectId: invitation.projectId,
               invitationId: invitation.id
-            }
+            })
           }
         })
       })
@@ -94,8 +101,7 @@ export async function PUT(request, { params }) {
         await tx.invitation.update({
           where: { id: parseInt(id) },
           data: { 
-            status: 'declined',
-            respondedAt: new Date()
+            status: 'rejected'
           }
         })
 
@@ -106,10 +112,10 @@ export async function PUT(request, { params }) {
             type: 'invitation_declined',
             title: 'Invitation refusée',
             message: `${invitation.receiver?.name || 'Un utilisateur'} a refusé votre invitation pour le projet "${invitation.project.name}"`,
-            data: {
+            data: JSON.stringify({
               projectId: invitation.projectId,
               invitationId: invitation.id
-            }
+            })
           }
         })
       })

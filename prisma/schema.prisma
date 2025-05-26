@@ -51,6 +51,7 @@ model Project {
   todos       Todo[]
   categories  Category[]
   shares      ProjectShare[]
+  invitations Invitation[]
   shareLinks  ShareLink[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
@@ -111,6 +112,7 @@ model Invitation {
   permission String   @default("view") // view, edit, admin
   status     String   @default("pending") // pending, accepted, rejected
   message    String?
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   sender     User     @relation("InvitationSender", fields: [senderId], references: [id], onDelete: Cascade)
   receiver   User?    @relation("InvitationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
