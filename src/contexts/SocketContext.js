@@ -26,11 +26,35 @@ export const SocketProvider = ({ children }) => {
       const token = Cookies.get('token')
       
       if (token) {
+        // Déterminer l'URL du serveur Socket.IO selon l'environnement
+        const getSocketUrl = () => {
+          if (typeof window !== 'undefined') {
+            // En développement
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+              return `http://${window.location.hostname}:${window.location.port || '3000'}`
+            }
+            // En production, utiliser la même origine que la page
+            return window.location.origin
+          }
+          // Fallback
+          return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        }
+
+        const socketUrl = getSocketUrl()
+        console.log('🔌 Connexion Socket.IO vers:', socketUrl)
+
         // Créer la connexion Socket.IO
-        const newSocket = io('http://localhost:3000', {
+        const newSocket = io(socketUrl, {
           auth: {
             token: token
-          }
+          },
+          transports: ['websocket', 'polling'],
+          timeout: 20000,
+          forceNew: true,
+          reconnection: true,
+          reconnectionDelay: 1000,
+          reconnectionAttempts: 5,
+          maxReconnectionAttempts: 5
         })
 
         // Événements de connexion
@@ -39,14 +63,28 @@ export const SocketProvider = ({ children }) => {
           setIsConnected(true)
         })
 
-        newSocket.on('disconnect', () => {
-          console.log('❌ Déconnecté du serveur Socket.IO')
+        newSocket.on('disconnect', (reason) => {
+          console.log('❌ Déconnecté du serveur Socket.IO:', reason)
           setIsConnected(false)
         })
 
         newSocket.on('connect_error', (error) => {
-          console.error('Erreur de connexion Socket.IO:', error.message)
+          console.error('🚨 Erreur de connexion Socket.IO:', error.message)
           setIsConnected(false)
+        })
+
+        newSocket.on('reconnect', (attemptNumber) => {
+          console.log('🔄 Reconnecté au serveur Socket.IO (tentative', attemptNumber, ')')
+          setIsConnected(true)
+        })
+
+        newSocket.on('reconnect_error', (error) => {
+          console.error('🚨 Erreur de reconnexion Socket.IO:', error.message)
+        })
+
+        newSocket.on('reconnect_failed', () => {
+          console.error('❌ Échec de reconnexion Socket.IO')
+          toast.error('Connexion temps réel perdue. Veuillez rafraîchir la page.')
         })
 
         // Écouter les invitations reçues
@@ -97,12 +135,14 @@ export const SocketProvider = ({ children }) => {
         setSocket(newSocket)
 
         return () => {
+          console.log('🔌 Fermeture de la connexion Socket.IO')
           newSocket.close()
         }
       }
     } else {
       // Déconnecter si l'utilisateur n'est pas connecté
       if (socket) {
+        console.log('🔌 Déconnexion Socket.IO (utilisateur non connecté)')
         socket.close()
         setSocket(null)
         setIsConnected(false)
@@ -114,12 +154,18 @@ export const SocketProvider = ({ children }) => {
   const joinProject = (projectId) => {
     if (socket && isConnected) {
       socket.emit('join_project', projectId)
+      console.log(`📋 Rejoindre le projet ${projectId}`)
+    } else {
+      console.warn('⚠️ Impossible de rejoindre le projet: Socket non connecté')
     }
   }
 
   const leaveProject = (projectId) => {
     if (socket && isConnected) {
       socket.emit('leave_project', projectId)
+      console.log(`📋 Quitter le projet ${projectId}`)
+    } else {
+      console.warn('⚠️ Impossible de quitter le projet: Socket non connecté')
     }
   }
 

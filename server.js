@@ -5,8 +5,18 @@ const { Server } = require('socket.io')
 const jwt = require('jsonwebtoken')
 
 const dev = process.env.NODE_ENV !== 'production'
-const hostname = 'localhost'
+const hostname = process.env.HOSTNAME || (dev ? 'localhost' : '0.0.0.0')
 const port = parseInt(process.env.PORT || '3000', 10)
+
+// Configuration des origines autorisées pour CORS
+const allowedOrigins = dev 
+  ? [`http://localhost:${port}`, `http://127.0.0.1:${port}`]
+  : [
+      process.env.NEXT_PUBLIC_APP_URL,
+      process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+      'https://todo.chghosts.fr',
+      'https://www.todo.chghosts.fr'
+    ].filter(Boolean)
 
 const app = next({ dev, hostname, port })
 const handle = app.getRequestHandler()
@@ -25,9 +35,15 @@ app.prepare().then(() => {
 
   const io = new Server(httpServer, {
     cors: {
-      origin: `http://${hostname}:${port}`,
-      methods: ['GET', 'POST']
-    }
+      origin: allowedOrigins,
+      methods: ['GET', 'POST'],
+      credentials: true
+    },
+    // Configuration pour la production
+    transports: ['websocket', 'polling'],
+    allowEIO3: true,
+    pingTimeout: 60000,
+    pingInterval: 25000
   })
 
   // Middleware d'authentification Socket.IO
@@ -68,8 +84,13 @@ app.prepare().then(() => {
     })
 
     // Déconnexion
-    socket.on('disconnect', () => {
-      console.log(`❌ Utilisateur déconnecté: ${socket.userName}`)
+    socket.on('disconnect', (reason) => {
+      console.log(`❌ Utilisateur déconnecté: ${socket.userName} (Raison: ${reason})`)
+    })
+
+    // Gestion des erreurs
+    socket.on('error', (error) => {
+      console.error(`🚨 Erreur Socket pour ${socket.userName}:`, error)
     })
   })
 
@@ -78,11 +99,13 @@ app.prepare().then(() => {
 
   httpServer
     .once('error', (err) => {
-      console.error(err)
+      console.error('❌ Erreur serveur:', err)
       process.exit(1)
     })
-    .listen(port, () => {
+    .listen(port, hostname, () => {
       console.log(`🚀 Serveur prêt sur http://${hostname}:${port}`)
       console.log(`🔌 Socket.IO activé`)
+      console.log(`🌍 Origines autorisées:`, allowedOrigins)
+      console.log(`📦 Mode:`, dev ? 'développement' : 'production')
     })
 }) 

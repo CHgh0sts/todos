@@ -9,6 +9,7 @@ import { SocketProvider } from '@/contexts/SocketContext'
 import { Toaster } from 'react-hot-toast'
 import Navbar from '@/components/Navbar'
 import CookieConsent from '@/components/CookieConsent'
+import SocketDiagnostic from '@/components/SocketDiagnostic'
 import { usePathname } from 'next/navigation'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -21,6 +22,9 @@ export default function RootLayout({ children }) {
   
   // Pages qui gèrent leur propre layout pleine largeur (sans container)
   const isFullWidthPage = pathname === '/' || pathname === '/api'
+  
+  // Afficher le diagnostic seulement en développement
+  const isDevelopment = process.env.NODE_ENV === 'development'
   
   return (
     <html lang="fr">
@@ -44,6 +48,7 @@ export default function RootLayout({ children }) {
                       }}
                     />
                     <CookieConsent />
+                    {isDevelopment && <SocketDiagnostic />}
                   </>
                 ) : isFullWidthPage ? (
                   // Layout pour les pages pleine largeur (avec navbar mais sans container)
@@ -63,6 +68,7 @@ export default function RootLayout({ children }) {
                       }}
                     />
                     <CookieConsent />
+                    {isDevelopment && <SocketDiagnostic />}
                   </div>
                 ) : (
                   // Layout normal pour les autres pages
@@ -82,6 +88,7 @@ export default function RootLayout({ children }) {
                       }}
                     />
                     <CookieConsent />
+                    {isDevelopment && <SocketDiagnostic />}
                   </div>
                 )}
               </NotificationBadgeProvider>
