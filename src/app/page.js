@@ -615,7 +615,10 @@ export default function Home() {
         )}
 
         {/* Footer */}
-        <footer className="bg-gray-900 text-white">
+        <footer className="bg-gray-900 text-white relative">
+          {/* Bordure dégradée en haut */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+          
           <div className="mx-auto px-4 py-16">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {/* Logo et description */}

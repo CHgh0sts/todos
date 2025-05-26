@@ -8,6 +8,7 @@ import { NotificationBadgeProvider } from '@/contexts/NotificationBadgeContext'
 import { SocketProvider } from '@/contexts/SocketContext'
 import { Toaster } from 'react-hot-toast'
 import Navbar from '@/components/Navbar'
+import CookieConsent from '@/components/CookieConsent'
 import { usePathname } from 'next/navigation'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -17,6 +18,9 @@ export default function RootLayout({ children }) {
   
   // Pages d'authentification où on ne veut pas la navbar
   const isAuthPage = pathname?.startsWith('/auth/')
+  
+  // Pages qui gèrent leur propre layout pleine largeur (sans container)
+  const isFullWidthPage = pathname === '/' || pathname === '/api'
   
   return (
     <html lang="fr">
@@ -39,7 +43,27 @@ export default function RootLayout({ children }) {
                         },
                       }}
                     />
+                    <CookieConsent />
                   </>
+                ) : isFullWidthPage ? (
+                  // Layout pour les pages pleine largeur (avec navbar mais sans container)
+                  <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+                    <Navbar />
+                    <main className="pt-20">
+                      {children}
+                    </main>
+                    <Toaster 
+                      position="top-right"
+                      toastOptions={{
+                        duration: 3000,
+                        style: {
+                          background: '#363636',
+                          color: '#fff',
+                        },
+                      }}
+                    />
+                    <CookieConsent />
+                  </div>
                 ) : (
                   // Layout normal pour les autres pages
                   <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -57,6 +81,7 @@ export default function RootLayout({ children }) {
                         },
                       }}
                     />
+                    <CookieConsent />
                   </div>
                 )}
               </NotificationBadgeProvider>

@@ -34,6 +34,8 @@ model User {
   friendsAsUser2         Friendship[]    @relation("User2")
   // Relations pour les liens de partage
   shareLinks             ShareLink[]     @relation("ShareLinkCreator")
+  // Relations pour les clés API
+  apiKeys                ApiKey[]
   createdAt              DateTime        @default(now())
   updatedAt              DateTime        @updatedAt
 }
@@ -179,4 +181,17 @@ model PasswordReset {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+// Clés API pour les développeurs
+model ApiKey {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @unique
+  key       String    @unique
+  name      String    @default("Clé API par défaut")
+  lastUsed  DateTime?
+  active    Boolean   @default(true)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
