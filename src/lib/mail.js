@@ -87,9 +87,14 @@ const createEmailTemplate = (title, emoji, content, ctaButton = null) => {
                   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                     <tr>
                       <td align="center">
-                        <div style="background: rgba(255, 255, 255, 0.1); border-radius: 50%; width: 80px; height: 80px; margin: 0 auto 20px; display: inline-flex; align-items: center; justify-content: center; line-height: 80px;">
-                          <span style="font-size: 40px; vertical-align: middle;">${emoji}</span>
-                        </div>
+                        <!-- Icône emoji avec table pour meilleur centrage -->
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto 20px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; width: 80px; height: 80px;">
+                          <tr>
+                            <td align="center" valign="middle" style="width: 80px; height: 80px; text-align: center; vertical-align: middle;">
+                              <span style="font-size: 40px; line-height: 1; display: inline-block;">${emoji}</span>
+                            </td>
+                          </tr>
+                        </table>
                         <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); line-height: 1.2;">
                           ${title}
                         </h1>
@@ -310,6 +315,113 @@ export const sendProjectInvitationEmail = async (to, projectName, inviterName, i
     to,
     subject: `🤝 ${inviterName} vous invite à collaborer sur "${projectName}"`,
     html: createEmailTemplate('Invitation de collaboration', '🤝', content)
+  }
+
+  await transporter.sendMail(mailOptions)
+}
+
+// Fonction pour envoyer des emails de réinitialisation de mot de passe
+export const sendPasswordResetEmail = async (to, userName, resetToken) => {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const resetLink = `${baseUrl}/auth/reset-password?token=${resetToken}`
+  
+  const content = `
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+      <tr>
+        <td align="center" style="padding-bottom: 30px;">
+          <h2 style="color: #1f2937; margin: 0 0 15px; font-size: 24px; font-weight: 600; line-height: 1.3;">
+            Réinitialisation de mot de passe 🔐
+          </h2>
+          <p style="color: #6b7280; margin: 0; font-size: 16px; line-height: 1.6; text-align: center;" class="mobile-text">
+            Bonjour <strong>${userName}</strong>,<br>
+            Vous avez demandé la réinitialisation de votre mot de passe CollabWave.<br>
+            Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe.
+          </p>
+        </td>
+      </tr>
+
+      <!-- Bouton CTA principal -->
+      <tr>
+        <td align="center" style="padding: 40px 0;">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto;">
+            <tr>
+              <td align="center" style="border-radius: 50px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);">
+                <a href="${resetLink}" class="cta-button" style="display: block; width: auto; max-width: 280px; margin: 0 auto; text-align: center; text-decoration: none; color: white; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 18px 30px; border-radius: 50px; line-height: 1.2; vertical-align: middle; box-sizing: border-box;">
+                  🔑 Réinitialiser mon mot de passe
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- Informations de sécurité -->
+      <tr>
+        <td style="padding: 30px 0;">
+          <div style="background: #fef3c7; border-radius: 15px; padding: 25px; border-left: 4px solid #f59e0b;">
+            <h3 style="color: #92400e; margin: 0 0 15px; font-size: 18px; font-weight: 600; display: flex; align-items: center;">
+              <span style="margin-right: 10px;">⚠️</span>
+              Important - Sécurité
+            </h3>
+            <ul style="color: #92400e; margin: 0; padding-left: 20px; line-height: 1.8;">
+              <li>Ce lien expire dans <strong>1 heure</strong> pour votre sécurité</li>
+              <li>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email</li>
+              <li>Votre mot de passe actuel reste inchangé tant que vous n'en créez pas un nouveau</li>
+            </ul>
+          </div>
+        </td>
+      </tr>
+
+      <!-- Lien de secours -->
+      <tr>
+        <td style="padding: 25px 0;">
+          <div style="background: #f3f4f6; border-radius: 10px; padding: 20px; border: 1px solid #d1d5db;">
+            <p style="color: #374151; margin: 0 0 10px; font-size: 14px; font-weight: 600;">
+              🔗 Le bouton ne fonctionne pas ?
+            </p>
+            <p style="color: #6b7280; margin: 0; font-size: 14px; line-height: 1.5;" class="mobile-text">
+              Copiez et collez ce lien dans votre navigateur :
+            </p>
+            <div style="background: white; border-radius: 8px; padding: 12px; margin-top: 10px; border: 1px solid #d1d5db;">
+              <code style="color: #1f2937; font-size: 12px; word-break: break-all; font-family: 'Courier New', monospace;">
+                ${resetLink}
+              </code>
+            </div>
+          </div>
+        </td>
+      </tr>
+
+      <!-- Aide supplémentaire -->
+      <tr>
+        <td style="padding: 25px 0 0;">
+          <div style="background: #ecfdf5; border-radius: 10px; padding: 20px; border: 1px solid #10b981;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+              <tr>
+                <td style="width: 40px; vertical-align: top; padding-right: 15px;">
+                  <div style="font-size: 20px;">💬</div>
+                </td>
+                <td style="vertical-align: top;">
+                  <h4 style="color: #065f46; margin: 0 0 8px; font-size: 16px; font-weight: 600;">
+                    Besoin d'aide ?
+                  </h4>
+                  <p style="color: #047857; margin: 0; font-size: 14px; line-height: 1.5;" class="mobile-text">
+                    Si vous rencontrez des difficultés ou si vous n'avez pas demandé cette réinitialisation, 
+                    n'hésitez pas à nous contacter. Notre équipe est là pour vous aider.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+      </tr>
+    </table>
+  `
+  
+  const mailOptions = {
+    from: process.env.SMTP_USER,
+    to,
+    subject: '🔐 Réinitialisation de votre mot de passe CollabWave',
+    html: createEmailTemplate('Réinitialisation de mot de passe', '🔑', content)
   }
 
   await transporter.sendMail(mailOptions)

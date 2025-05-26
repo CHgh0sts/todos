@@ -171,3 +171,12 @@ model ShareLink {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }
+
+// Réinitialisation de mot de passe
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
