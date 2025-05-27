@@ -44,6 +44,15 @@ export default function ProjectTodosPage() {
   const [editColor, setEditColor] = useState('#3B82F6')
   const [editEmoji, setEditEmoji] = useState('📁')
 
+  // États pour l'édition de todos
+  const [showEditTodoModal, setShowEditTodoModal] = useState(false)
+  const [editingTodo, setEditingTodo] = useState(null)
+  const [editTodoTitle, setEditTodoTitle] = useState('')
+  const [editTodoDescription, setEditTodoDescription] = useState('')
+  const [editTodoPriority, setEditTodoPriority] = useState('medium')
+  const [editTodoDueDate, setEditTodoDueDate] = useState('')
+  const [editTodoCategoryId, setEditTodoCategoryId] = useState('')
+
   // Couleurs prédéfinies
   const colors = [
     '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
@@ -299,11 +308,62 @@ export default function ProjectTodosPage() {
         setTodos(todos.filter(todo => todo.id !== id))
         toast.success('Todo supprimé !')
       } else {
-        toast.error('Erreur lors de la suppression')
+        // Essayer de récupérer le message d'erreur du serveur
+        try {
+          const errorData = await response.json()
+          console.error('Erreur serveur lors de la suppression:', errorData)
+          toast.error(errorData.error || `Erreur lors de la suppression (${response.status})`)
+        } catch (parseError) {
+          console.error('Erreur lors du parsing de la réponse d\'erreur:', parseError)
+          toast.error(`Erreur lors de la suppression (${response.status})`)
+        }
       }
     } catch (error) {
       console.error('Erreur lors de la suppression du todo:', error)
-      toast.error('Erreur lors de la suppression')
+      toast.error('Erreur de connexion lors de la suppression')
+    }
+  }
+
+  const openEditTodoModal = (todo) => {
+    setEditingTodo(todo)
+    setEditTodoTitle(todo.title)
+    setEditTodoDescription(todo.description || '')
+    setEditTodoPriority(todo.priority)
+    setEditTodoDueDate(todo.dueDate ? todo.dueDate.split('T')[0] : '')
+    setEditTodoCategoryId(todo.categoryId || '')
+    setShowEditTodoModal(true)
+  }
+
+  const updateTodo = async (e) => {
+    e.preventDefault()
+    if (!editTodoTitle.trim() || !editingTodo) return
+
+    try {
+      const response = await fetch(`/api/todos/${editingTodo.id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          title: editTodoTitle.trim(),
+          description: editTodoDescription.trim() || null,
+          priority: editTodoPriority,
+          dueDate: editTodoDueDate || null,
+          categoryId: editTodoCategoryId || null
+        })
+      })
+      
+      if (response.ok) {
+        const updatedTodo = await response.json()
+        setTodos(todos.map(todo => todo.id === updatedTodo.id ? updatedTodo : todo))
+        setShowEditTodoModal(false)
+        setEditingTodo(null)
+        toast.success('Tâche mise à jour avec succès !')
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Erreur lors de la mise à jour')
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du todo:', error)
+      toast.error('Erreur lors de la mise à jour')
     }
   }
 
@@ -882,6 +942,19 @@ export default function ProjectTodosPage() {
                     </div>
                     
                     <div className="flex items-center space-x-2 ml-2 flex-shrink-0">
+                      {/* Bouton d'édition selon les permissions */}
+                      {todo.canEdit && (
+                        <button
+                          onClick={() => openEditTodoModal(todo)}
+                          className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1"
+                          title="Modifier cette tâche"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                      )}
+                      
                       {/* Bouton de suppression selon les permissions */}
                       {todo.canDelete && (
                         <button
@@ -1027,6 +1100,103 @@ export default function ProjectTodosPage() {
             <button
               type="button"
               onClick={() => setShowEditProjectModal(false)}
+              className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
+            >
+              <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Annuler
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal d'édition de todo */}
+      <Modal
+        isOpen={showEditTodoModal}
+        onClose={() => setShowEditTodoModal(false)}
+        title="✏️ Modifier la tâche"
+        description="Modifiez les informations de votre tâche"
+        size="large"
+      >
+        <form onSubmit={updateTodo} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">📝 Titre *</label>
+            <input
+              type="text"
+              value={editTodoTitle}
+              onChange={(e) => setEditTodoTitle(e.target.value)}
+              placeholder="Titre de la tâche..."
+              required
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">📄 Description</label>
+            <textarea
+              value={editTodoDescription}
+              onChange={(e) => setEditTodoDescription(e.target.value)}
+              placeholder="Description optionnelle..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">⚡ Priorité</label>
+              <select
+                value={editTodoPriority}
+                onChange={(e) => setEditTodoPriority(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="low">🟢 Basse</option>
+                <option value="medium">🟡 Moyenne</option>
+                <option value="high">🔴 Haute</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">📅 Date d'échéance</label>
+              <input
+                type="date"
+                value={editTodoDueDate}
+                onChange={(e) => setEditTodoDueDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">🏷️ Catégorie</label>
+              <select
+                value={editTodoCategoryId}
+                onChange={(e) => setEditTodoCategoryId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Aucune catégorie</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.emoji || '📁'} {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          <div className="flex gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
+            <button
+              type="submit"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+            >
+              <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Mettre à jour la tâche
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowEditTodoModal(false)}
               className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
             >
               <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

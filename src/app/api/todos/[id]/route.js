@@ -140,10 +140,13 @@ export async function DELETE(request, { params }) {
 
     const { id } = params
     
-    // Récupérer le todo avec le projet
+    // Récupérer le todo avec le projet et l'utilisateur
     const todo = await prisma.todo.findUnique({
       where: { id: parseInt(id) },
       include: {
+        user: {
+          select: { id: true, name: true, email: true }
+        },
         project: {
           include: {
             shares: {
@@ -167,12 +170,31 @@ export async function DELETE(request, { params }) {
     const userProjectShare = todo.project.shares.find(share => share.userId === userId)
     const projectPermission = isProjectOwner ? 'admin' : userProjectShare?.permission
 
+    // Logs de débogage
+    console.log('Suppression todo - Debug permissions:', {
+      todoId: parseInt(id),
+      userId,
+      todoUserId: todo.userId,
+      projectUserId: todo.project.userId,
+      isProjectOwner,
+      userProjectShare: userProjectShare ? { userId: userProjectShare.userId, permission: userProjectShare.permission } : null,
+      projectPermission
+    })
+
     // Vérifier que l'utilisateur peut supprimer ce todo
     const canDelete = projectPermission === 'admin' || (projectPermission === 'edit' && todo.userId === userId)
+
+    console.log('Suppression todo - Peut supprimer:', canDelete)
 
     if (!canDelete) {
       return NextResponse.json({ error: 'Permissions insuffisantes pour supprimer ce todo' }, { status: 403 })
     }
+
+    // Récupérer l'utilisateur qui supprime pour les notifications
+    const deletingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true }
+    })
 
     // Créer des notifications pour les collaborateurs avant suppression
     if (todo.project.shares.length > 0) {
@@ -182,7 +204,7 @@ export async function DELETE(request, { params }) {
           userId: share.userId,
           type: 'todo_deleted',
           title: 'Todo supprimé',
-          message: `${todo.user.name} a supprimé "${todo.title}" du projet "${todo.project.name}"`,
+          message: `${deletingUser.name} a supprimé "${todo.title}" du projet "${todo.project.name}"`,
           data: JSON.stringify({
             todoId: parseInt(id),
             projectId: todo.projectId,
@@ -203,7 +225,7 @@ export async function DELETE(request, { params }) {
         todoId: parseInt(id),
         projectId: todo.projectId,
         userId: userId,
-        userName: todo.user.name,
+        userName: deletingUser.name,
         todoTitle: todo.title
       })
     }

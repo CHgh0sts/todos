@@ -7,7 +7,7 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { useSocket } from '@/contexts/SocketContext'
 import { useNotificationBadges } from '@/contexts/NotificationBadgeContext'
 import NotificationBadge from './ui/NotificationBadge'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -17,6 +17,7 @@ export default function Navbar() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const menuRef = useRef(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,6 +28,23 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Gestionnaire pour fermer le menu quand on clique en dehors
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isMenuOpen])
 
   // Fonction pour déterminer si un lien est actif
   const isActive = (path) => {
@@ -111,14 +129,14 @@ export default function Navbar() {
                   Catégories
                 </Link>
                 <Link
-                  href="/friends"
-                  className={getLinkClasses('/friends')}
+                  href="/api"
+                  className={getLinkClasses('/api')}
                 >
                   <svg className={`transition-all duration-300 ${isScrolled ? 'w-3 h-3 mr-2' : 'w-4 h-4 mr-2'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                   <span className="relative">
-                    Amis
+                    API
                     <NotificationBadge count={badges.friends} />
                   </span>
                 </Link>
@@ -142,7 +160,7 @@ export default function Navbar() {
                   {theme === 'system' ? '🖥️' : theme === 'light' ? '☀️' : '🌙'}
                 </button>
                 
-                <div className="relative">
+                <div className="relative" ref={menuRef}>
                   <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className={`flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 ${
@@ -315,15 +333,15 @@ export default function Navbar() {
                   Catégories
                 </Link>
                 <Link
-                  href="/friends"
-                  className={getLinkClasses('/friends', true)}
+                  href="/api"
+                  className={getLinkClasses('/api', true)}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <svg className={`transition-all duration-300 ${isScrolled ? 'w-3 h-3' : 'w-4 h-4'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                   <span className="relative">
-                    Amis
+                    API
                     <NotificationBadge count={badges.friends} />
                   </span>
                 </Link>

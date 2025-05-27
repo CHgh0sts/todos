@@ -555,37 +555,492 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
 
-            {/* Section statistiques comparatives */}
-            <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-8 text-white mb-4">
-                  <div className="text-4xl font-bold mb-2">30s</div>
-                  <div className="text-lg">Temps de démarrage</div>
-                </div>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Contre 2-3 heures pour configurer d'autres solutions
-                </p>
-              </div>
+        {/* Section Voici nos offres */}
+        <section className="py-20 bg-white dark:bg-gray-900 relative overflow-hidden">
+          {/* Background animé pour la section offres */}
+          <div className="absolute inset-0">
+            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+              <defs>
+                {/* Gradients spécifiques pour les offres - tons plus chauds */}
+                <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.12" />
+                  <stop offset="100%" stopColor="#d97706" stopOpacity="0.06" />
+                </linearGradient>
+                <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.12" />
+                  <stop offset="100%" stopColor="#059669" stopOpacity="0.06" />
+                </linearGradient>
+                <linearGradient id="indigoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.12" />
+                  <stop offset="100%" stopColor="#4f46e5" stopOpacity="0.06" />
+                </linearGradient>
+                <linearGradient id="roseGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.10" />
+                  <stop offset="100%" stopColor="#e11d48" stopOpacity="0.05" />
+                </linearGradient>
+                <linearGradient id="violetGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.12" />
+                  <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.06" />
+                </linearGradient>
+              </defs>
               
-              <div className="text-center">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-8 text-white mb-4">
-                  <div className="text-4xl font-bold mb-2">0</div>
-                  <div className="text-lg">Formation requise</div>
-                </div>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Interface si intuitive qu'aucune formation n'est nécessaire
-                </p>
-              </div>
+              {/* Formes organiques principales - différentes de la hero */}
+              <path d="M400,100 Q1200,50 1600,400 Q1800,800 1200,950 Q600,1100 200,700 Q0,300 400,100 Z" 
+                    fill="url(#goldGradient)" opacity="0.7">
+                <animateTransform attributeName="transform" type="rotate" 
+                  values="0 800 525;-360 800 525" dur="90s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.7;0.3;0.7" dur="15s" repeatCount="indefinite" />
+              </path>
               
-              <div className="text-center">
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-8 text-white mb-4">
-                  <div className="text-4xl font-bold mb-2">100%</div>
-                  <div className="text-lg">Temps réel</div>
+              <path d="M800,0 Q1600,100 1900,600 Q1700,1000 1100,1100 Q500,1200 300,800 Q100,400 800,0 Z" 
+                    fill="url(#emeraldGradient)" opacity="0.6">
+                <animateTransform attributeName="transform" type="rotate" 
+                  values="360 1100 550;0 1100 550" dur="75s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.6;0.9;0.6" dur="18s" repeatCount="indefinite" />
+              </path>
+              
+              <path d="M0,200 Q700,150 1100,500 Q1300,900 800,1000 Q300,1100 100,700 Q-100,300 0,200 Z" 
+                    fill="url(#indigoGradient)" opacity="0.8">
+                <animateTransform attributeName="transform" type="rotate" 
+                  values="0 600 600;360 600 600" dur="65s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.8;0.4;0.8" dur="12s" repeatCount="indefinite" />
+              </path>
+              
+              {/* Formes moyennes avec animations différentes */}
+              <path d="M1200,150 Q1700,100 1850,450 Q1800,750 1400,800 Q1000,850 1050,500 Q1100,200 1200,150 Z" 
+                    fill="url(#roseGradient)" opacity="0.5">
+                <animateTransform attributeName="transform" type="rotate" 
+                  values="0 1425 475;-360 1425 475" dur="50s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.5;0.8;0.5" dur="10s" repeatCount="indefinite" />
+              </path>
+              
+              <path d="M300,700 Q700,600 1000,900 Q800,1200 500,1150 Q200,1100 250,850 Q280,650 300,700 Z" 
+                    fill="url(#violetGradient)" opacity="0.6">
+                <animateTransform attributeName="transform" type="rotate" 
+                  values="360 650 925;0 650 925" dur="40s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.6;0.3;0.6" dur="11s" repeatCount="indefinite" />
+              </path>
+              
+              {/* Cercles avec tailles et positions différentes */}
+              <circle cx="200" cy="300" r="140" fill="url(#goldGradient)" opacity="0.4">
+                <animateTransform attributeName="transform" type="translate" 
+                  values="0,0;100,70;0,0" dur="20s" repeatCount="indefinite" />
+                <animate attributeName="r" values="140;200;140" dur="16s" repeatCount="indefinite" />
+              </circle>
+              
+              <circle cx="1700" cy="200" r="110" fill="url(#emeraldGradient)" opacity="0.5">
+                <animateTransform attributeName="transform" type="translate" 
+                  values="0,0;-80,90;0,0" dur="25s" repeatCount="indefinite" />
+                <animate attributeName="r" values="110;170;110" dur="14s" repeatCount="indefinite" />
+              </circle>
+              
+              <circle cx="1600" cy="900" r="130" fill="url(#indigoGradient)" opacity="0.4">
+                <animateTransform attributeName="transform" type="translate" 
+                  values="0,0;-70,-80;0,0" dur="30s" repeatCount="indefinite" />
+                <animate attributeName="r" values="130;190;130" dur="18s" repeatCount="indefinite" />
+              </circle>
+              
+              <circle cx="500" cy="1000" r="120" fill="url(#roseGradient)" opacity="0.3">
+                <animateTransform attributeName="transform" type="translate" 
+                  values="0,0;90,-50;0,0" dur="22s" repeatCount="indefinite" />
+                <animate attributeName="r" values="120;180;120" dur="15s" repeatCount="indefinite" />
+              </circle>
+              
+              {/* Polygones avec formes différentes */}
+              <polygon points="100,500 220,420 320,520 200,620" fill="url(#goldGradient)" opacity="0.35">
+                <animateTransform attributeName="transform" type="rotate" 
+                  values="0 210 520;-360 210 520" dur="35s" repeatCount="indefinite" />
+              </polygon>
+              
+              <polygon points="1500,50 1680,20 1750,120 1620,170" fill="url(#emeraldGradient)" opacity="0.4">
+                <animateTransform attributeName="transform" type="rotate" 
+                  values="360 1625 95;0 1625 95" dur="42s" repeatCount="indefinite" />
+              </polygon>
+              
+              <polygon points="1650,1000 1800,950 1850,1050 1700,1100" fill="url(#indigoGradient)" opacity="0.35">
+                <animateTransform attributeName="transform" type="rotate" 
+                  values="0 1750 1025;360 1750 1025" dur="38s" repeatCount="indefinite" />
+              </polygon>
+              
+              {/* Triangles organiques */}
+              <path d="M900,80 Q1080,30 1150,200 Q1020,320 850,270 Q780,150 900,80 Z" 
+                    fill="url(#violetGradient)" opacity="0.4">
+                <animateTransform attributeName="transform" type="rotate" 
+                  values="0 965 175;-360 965 175" dur="48s" repeatCount="indefinite" />
+              </path>
+              
+              <path d="M50,1100 Q220,1050 280,1200 Q150,1300 20,1250 Q-30,1150 50,1100 Z" 
+                    fill="url(#roseGradient)" opacity="0.35">
+                <animateTransform attributeName="transform" type="rotate" 
+                  values="360 150 1175;0 150 1175" dur="45s" repeatCount="indefinite" />
+              </path>
+              
+              {/* Lignes connectrices avec patterns différents */}
+              <path d="M200,300 Q900,200 1600,400" stroke="url(#goldGradient)" strokeWidth="2" fill="none" opacity="0.12">
+                <animate attributeName="stroke-dasharray" values="0,1800;1800,0;0,1800" dur="35s" repeatCount="indefinite" />
+              </path>
+              
+              <path d="M600,900 Q1200,700 1700,1000" stroke="url(#emeraldGradient)" strokeWidth="3" fill="none" opacity="0.15">
+                <animate attributeName="stroke-dasharray" values="1600,0;0,1600;1600,0" dur="40s" repeatCount="indefinite" />
+              </path>
+              
+              <path d="M300,600 Q800,400 1400,700" stroke="url(#indigoGradient)" strokeWidth="2" fill="none" opacity="0.10">
+                <animate attributeName="stroke-dasharray" values="0,1400;1400,0;0,1400" dur="38s" repeatCount="indefinite" />
+              </path>
+              
+              <path d="M1100,100 Q1500,300 1800,600" stroke="url(#violetGradient)" strokeWidth="2" fill="none" opacity="0.12">
+                <animate attributeName="stroke-dasharray" values="1000,0;0,1000;1000,0" dur="43s" repeatCount="indefinite" />
+              </path>
+            </svg>
+          </div>
+
+          {/* Overlay pour améliorer la lisibilité */}
+          <div className="absolute inset-0 bg-white/40 dark:bg-gray-900/40"></div>
+          
+          {/* Effet de particules spécifiques aux offres */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/5 left-1/5 w-1.5 h-1.5 bg-amber-400 rounded-full opacity-50 animate-pulse"></div>
+            <div className="absolute top-1/4 right-1/5 w-1 h-1 bg-emerald-400 rounded-full opacity-40 animate-ping" style={{animationDelay: '1.5s'}}></div>
+            <div className="absolute bottom-1/4 left-1/4 w-2 h-2 bg-indigo-400 rounded-full opacity-35 animate-pulse" style={{animationDelay: '3s'}}></div>
+            <div className="absolute top-3/5 right-1/4 w-1 h-1 bg-rose-500 rounded-full opacity-45 animate-ping" style={{animationDelay: '4.5s'}}></div>
+            <div className="absolute bottom-1/5 right-1/6 w-1.5 h-1.5 bg-violet-500 rounded-full opacity-40 animate-pulse" style={{animationDelay: '6s'}}></div>
+          </div>
+
+          <div className="relative mx-auto px-4">
+            {/* Header */}
+            <div className="text-center mb-16">
+              <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Voici nos offres
+                </span>
+              </h2>
+              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                Des plans adaptés à tous vos besoins, de l'équipe startup à l'entreprise internationale
+              </p>
+            </div>
+
+            {/* Plans */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {/* Plan Gratuit */}
+              <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Gratuit</h3>
+                  <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">0€</div>
+                  <p className="text-gray-500 dark:text-gray-400 mb-6">Pour toujours</p>
+                  
+                  <ul className="space-y-4 text-left mb-8">
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">3 projets maximum</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">5 participants par projet</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">1 000 requêtes API/mois</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">Collaboration temps réel</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">Support communautaire</span>
+                    </li>
+                  </ul>
+                  
+                  <button className="w-full py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105">
+                    Commencer Gratuitement
+                  </button>
                 </div>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Collaboration instantanée avec Socket.IO
-                </p>
+              </div>
+
+              {/* Plan Pro */}
+              <div className="relative bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-8 border-2 border-blue-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                {/* Badge Populaire */}
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-semibold">
+                    ⭐ Populaire
+                  </span>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Pro</h3>
+                  <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">29€</div>
+                  <p className="text-gray-500 dark:text-gray-400 mb-6">par mois</p>
+                  
+                  <ul className="space-y-4 text-left mb-8">
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">50 projets maximum</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">25 participants par projet</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">100 000 requêtes API/mois</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">Webhooks avancés</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">Analytics détaillées</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">Support prioritaire</span>
+                    </li>
+                  </ul>
+                  
+                  <button className="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105">
+                    Essayer Pro
+                  </button>
+                </div>
+              </div>
+
+              {/* Plan Entreprise */}
+              <div className="relative bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-8 border border-purple-200 dark:border-purple-700 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Entreprise</h3>
+                  <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">Sur mesure</div>
+                  <p className="text-gray-500 dark:text-gray-400 mb-6">Contactez-nous</p>
+                  
+                  <ul className="space-y-4 text-left mb-8">
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-purple-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">Projets illimités</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-purple-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">Participants illimités</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-purple-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">API illimitée</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-purple-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">SLA 99.9%</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-purple-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">Support dédié 24/7</span>
+                    </li>
+                    <li className="flex items-start">
+                      <svg className="w-5 h-5 text-purple-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-300">Déploiement on-premise</span>
+                    </li>
+                  </ul>
+                  
+                  <button className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105">
+                    Nous Contacter
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Section avantages - repositionnée au-dessus du background */}
+            <div className="mt-20 text-center relative">
+              {/* Fond avec gradient et effet glassmorphism */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-blue-50/90 to-purple-50/80 dark:from-gray-900/80 dark:via-blue-900/20 dark:to-purple-900/20 rounded-3xl backdrop-blur-lg border border-white/20 dark:border-gray-700/30 shadow-2xl"></div>
+              
+              <div className="relative z-10 py-16 px-8">
+                <div className="mb-12">
+                  <h3 className="text-3xl sm:text-4xl font-bold mb-4">
+                    <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      Tous les plans incluent
+                    </span>
+                  </h3>
+                  <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    Des fonctionnalités premium incluses dans chaque abonnement pour votre réussite
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+                  {/* Sécurité SSL */}
+                  <div className="group relative h-80">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition-opacity duration-300"></div>
+                    <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl h-full flex flex-col justify-between">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        </div>
+                        <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Sécurité SSL</h4>
+                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">Chiffrement de bout en bout pour protéger vos données</p>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                          <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                          Actif
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Temps réel */}
+                  <div className="group relative h-80">
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition-opacity duration-300"></div>
+                    <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-600 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl h-full flex flex-col justify-between">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                        <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Temps réel</h4>
+                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">Synchronisation instantanée avec Socket.IO</p>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                          <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-ping"></span>
+                          Live
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sauvegarde */}
+                  <div className="group relative h-80">
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition-opacity duration-300"></div>
+                    <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl h-full flex flex-col justify-between">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2M7 4h10" />
+                          </svg>
+                        </div>
+                        <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Sauvegarde</h4>
+                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">Backup automatique quotidien de vos projets</p>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                          <span className="w-2 h-2 bg-orange-400 rounded-full mr-2 animate-pulse"></span>
+                          24h/24
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Analytics */}
+                  <div className="group relative h-80">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition-opacity duration-300"></div>
+                    <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl h-full flex flex-col justify-between">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </div>
+                        <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Analytics</h4>
+                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">Rapports détaillés et métriques avancées</p>
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                          <span className="w-2 h-2 bg-purple-400 rounded-full mr-2 animate-pulse"></span>
+                          Pro
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section bonus avec icônes supplémentaires */}
+                <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="font-medium">Support 24/7</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="font-medium">Mises à jour gratuites</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="font-medium">API complète</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="font-medium">Conformité RGPD</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -1,148 +1,162 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
-import { verifyToken, getTokenFromRequest } from '@/lib/auth'
+import { PrismaClient } from '@prisma/client'
+import { withApiLogging, getAuthenticatedUser } from '@/lib/apiMiddleware'
 
-async function getUserFromRequest(request) {
-  const token = getTokenFromRequest(request)
-  if (!token) return null
-  
-  const decoded = verifyToken(token)
-  if (!decoded) return null
-  
-  return decoded.userId
-}
+const prisma = new PrismaClient()
 
-export async function GET(request) {
+async function getHandler(request) {
   try {
-    const userId = await getUserFromRequest(request)
-    if (!userId) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    const authResult = await getAuthenticatedUser(request)
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status })
     }
 
-    const { searchParams } = new URL(request.url)
-    const projectId = searchParams.get('projectId')
-    const search = searchParams.get('search') || ''
-    const category = searchParams.get('category')
-    const priority = searchParams.get('priority')
-    const completed = searchParams.get('completed')
+    const { user } = authResult
+    const userId = user.id
 
-    if (!projectId) {
-      return NextResponse.json({ error: 'ID du projet requis' }, { status: 400 })
-    }
+    const url = new URL(request.url)
+    const projectId = url.searchParams.get('projectId')
+    const completed = url.searchParams.get('completed')
+    const search = url.searchParams.get('search')
+    const category = url.searchParams.get('category')
+    const priority = url.searchParams.get('priority')
 
-    // Vérifier que l'utilisateur a accès au projet
-    const projectAccess = await prisma.project.findFirst({
-      where: {
-        id: parseInt(projectId),
-        OR: [
-          { userId: userId }, // Propriétaire
-          {
+    let whereClause = {
+      OR: [
+        { userId: userId },
+        {
+          project: {
             shares: {
               some: {
                 userId: userId
               }
             }
           }
-        ]
-      }
-    })
-
-    if (!projectAccess) {
-      return NextResponse.json({ error: 'Accès au projet refusé' }, { status: 403 })
+        }
+      ]
     }
 
-    // Recherche de base pour les filtres
-    const searchFilter = search ? {
-      OR: [
+    if (projectId) {
+      whereClause.projectId = parseInt(projectId)
+    }
+
+    if (completed !== null && completed !== '') {
+      whereClause.completed = completed === 'true'
+    }
+
+    if (search) {
+      whereClause.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } }
       ]
-    } : {}
+    }
 
-    const priorityFilter = priority ? { priority } : {}
-    const completedFilter = completed !== null ? { completed: completed === 'true' } : {}
-    const categoryFilter = category ? { categoryId: parseInt(category) } : {}
+    if (category) {
+      whereClause.categoryId = parseInt(category)
+    }
 
-    // Récupérer les todos du projet
+    if (priority) {
+      whereClause.priority = priority
+    }
+
     const todos = await prisma.todo.findMany({
-      where: {
-        projectId: parseInt(projectId),
-        ...searchFilter,
-        ...categoryFilter,
-        ...priorityFilter,
-        ...completedFilter
-      },
+      where: whereClause,
       include: {
         category: true,
+        project: {
+          include: {
+            shares: {
+              where: {
+                userId: userId
+              }
+            }
+          }
+        },
         user: {
-          select: { id: true, name: true, email: true }
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
         }
       },
       orderBy: [
         { completed: 'asc' },
+        { priority: 'desc' },
         { createdAt: 'desc' }
       ]
     })
 
-    // Déterminer les permissions de l'utilisateur sur le projet
-    const isOwner = projectAccess.userId === userId
-    let userPermission = 'view'
-    
-    if (isOwner) {
-      userPermission = 'admin'
-    } else {
-      const userShare = await prisma.projectShare.findFirst({
-        where: {
-          projectId: parseInt(projectId),
-          userId: userId
-        }
-      })
-      userPermission = userShare?.permission || 'view'
-    }
+    // Ajouter les permissions pour chaque todo
+    const todosWithPermissions = todos.map(todo => {
+      const isOwner = todo.project.userId === userId
+      const isCreator = todo.userId === userId
+      
+      // Trouver les permissions de l'utilisateur sur le projet
+      const userShare = todo.project.shares.find(share => share.userId === userId)
+      const projectPermission = userShare ? userShare.permission : null
+      
+      // Permissions d'édition et de suppression
+      const canEdit = isCreator || isOwner || projectPermission === 'admin'
+      const canDelete = isCreator || isOwner || projectPermission === 'admin'
 
-    // Enrichir chaque todo avec les permissions
-    const enrichedTodos = todos.map(todo => ({
-      ...todo,
-      canEdit: userPermission === 'edit' || userPermission === 'admin' || todo.userId === userId,
-      canDelete: userPermission === 'admin' || (userPermission === 'edit' && todo.userId === userId),
-      projectPermission: userPermission
-    }))
-    
-    return NextResponse.json(enrichedTodos)
+      // Nettoyer l'objet project pour ne pas exposer les shares
+      const cleanProject = {
+        id: todo.project.id,
+        name: todo.project.name,
+        color: todo.project.color,
+        emoji: todo.project.emoji
+      }
+
+      return {
+        ...todo,
+        project: cleanProject,
+        canEdit,
+        canDelete
+      }
+    })
+
+    return NextResponse.json(todosWithPermissions)
   } catch (error) {
     console.error('Erreur lors de la récupération des todos:', error)
-    return NextResponse.json({ error: 'Erreur lors de la récupération des todos' }, { status: 500 })
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
 
-export async function POST(request) {
+async function postHandler(request) {
   try {
-    const userId = await getUserFromRequest(request)
-    if (!userId) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    const authResult = await getAuthenticatedUser(request)
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status })
     }
 
-    const { title, description, priority, dueDate, categoryId, projectId } = await request.json()
-    
-    if (!title) {
+    const { user } = authResult
+    const userId = user.id
+
+    const body = await request.json()
+    const { title, description, projectId, categoryId, priority, dueDate } = body
+
+    if (!title || !title.trim()) {
       return NextResponse.json({ error: 'Le titre est requis' }, { status: 400 })
     }
 
     if (!projectId) {
-      return NextResponse.json({ error: 'L\'ID du projet est requis' }, { status: 400 })
+      return NextResponse.json({ error: 'Le projet est requis' }, { status: 400 })
     }
 
-    // Vérifier que l'utilisateur peut créer des todos dans ce projet
-    const projectAccess = await prisma.project.findFirst({
+    // Vérifier que l'utilisateur a accès au projet
+    const project = await prisma.project.findFirst({
       where: {
         id: parseInt(projectId),
         OR: [
-          { userId: userId }, // Propriétaire
+          { userId: userId },
           {
             shares: {
               some: {
                 userId: userId,
-                permission: { in: ['edit', 'admin'] }
+                permission: {
+                  in: ['edit', 'admin']
+                }
               }
             }
           }
@@ -150,64 +164,46 @@ export async function POST(request) {
       }
     })
 
-    if (!projectAccess) {
-      return NextResponse.json({ error: 'Permissions insuffisantes pour créer des todos dans ce projet' }, { status: 403 })
+    if (!project) {
+      return NextResponse.json({ error: 'Projet non trouvé ou accès refusé' }, { status: 404 })
     }
 
     const todo = await prisma.todo.create({
       data: {
-        title,
-        description,
+        title: title.trim(),
+        description: description?.trim() || null,
+        projectId: parseInt(projectId),
+        categoryId: categoryId ? parseInt(categoryId) : null,
         priority: priority || 'medium',
         dueDate: dueDate ? new Date(dueDate) : null,
-        categoryId: categoryId || null,
-        projectId: parseInt(projectId),
-        userId
+        userId: userId
       },
       include: {
         category: true,
+        project: {
+          select: {
+            id: true,
+            name: true,
+            color: true,
+            emoji: true
+          }
+        },
         user: {
-          select: { id: true, name: true, email: true }
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
         }
       }
     })
 
-    // Déterminer les permissions pour le retour
-    const isOwner = projectAccess.userId === userId
-    let userPermission = 'view'
-    
-    if (isOwner) {
-      userPermission = 'admin'
-    } else {
-      const userShare = await prisma.projectShare.findFirst({
-        where: {
-          projectId: parseInt(projectId),
-          userId: userId
-        }
-      })
-      userPermission = userShare?.permission || 'view'
-    }
-
-    const enrichedTodo = {
-      ...todo,
-      canEdit: userPermission === 'edit' || userPermission === 'admin' || todo.userId === userId,
-      canDelete: userPermission === 'admin' || (userPermission === 'edit' && todo.userId === userId),
-      projectPermission: userPermission
-    }
-
-    // Émettre un événement Socket.IO pour la création en temps réel
-    if (global.io) {
-      global.io.to(`project_${projectId}`).emit('todo_created', {
-        todo: enrichedTodo,
-        projectId: parseInt(projectId),
-        userId: userId,
-        userName: todo.user.name
-      })
-    }
-    
-    return NextResponse.json(enrichedTodo, { status: 201 })
+    return NextResponse.json(todo, { status: 201 })
   } catch (error) {
     console.error('Erreur lors de la création du todo:', error)
-    return NextResponse.json({ error: 'Erreur lors de la création du todo' }, { status: 500 })
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
-} 
+}
+
+export const GET = withApiLogging(getHandler)
+export const POST = withApiLogging(postHandler) 

@@ -34,6 +34,10 @@ export default function ProfilePage() {
   const [apiKeyLoading, setApiKeyLoading] = useState(false)
   const [copied, setCopied] = useState(false)
 
+  // États pour l'utilisation de l'API
+  const [apiUsage, setApiUsage] = useState(null)
+  const [apiUsageLoading, setApiUsageLoading] = useState(true)
+
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
@@ -41,6 +45,7 @@ export default function ProfilePage() {
         return
       }
       fetchStats()
+      fetchApiUsage()
       // Initialiser les valeurs du formulaire
       setEditName(user.name)
       setEditEmail(user.email)
@@ -58,40 +63,45 @@ export default function ProfilePage() {
 
   const fetchStats = async () => {
     try {
-      const [todosResponse, categoriesResponse] = await Promise.all([
-        fetch('/api/todos', { headers: getAuthHeaders() }),
-        fetch('/api/categories', { headers: getAuthHeaders() })
-      ])
+      const response = await fetch('/api/user/stats', { 
+        headers: getAuthHeaders() 
+      })
       
-      if (todosResponse.ok && categoriesResponse.ok) {
-        const todos = await todosResponse.json()
-        const categories = await categoriesResponse.json()
-        
-        const completed = todos.filter(todo => todo.completed).length
-        const pending = todos.filter(todo => !todo.completed).length
-        const overdue = todos.filter(todo => 
-          !todo.completed && 
-          todo.dueDate && 
-          new Date(todo.dueDate) < new Date() &&
-          new Date(todo.dueDate).toDateString() !== new Date().toDateString()
-        ).length
-        
-        const highPriority = todos.filter(todo => !todo.completed && todo.priority === 'high').length
-        
-        setStats({
-          totalTodos: todos.length,
-          completed,
-          pending,
-          overdue,
-          highPriority,
-          totalCategories: categories.length
-        })
+      if (response.ok) {
+        const stats = await response.json()
+        setStats(stats)
+      } else {
+        console.error('Erreur lors du chargement des statistiques:', response.status)
+        toast.error('Erreur lors du chargement des statistiques')
       }
     } catch (error) {
       console.error('Erreur lors du chargement des statistiques:', error)
       toast.error('Erreur lors du chargement des statistiques')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchApiUsage = async () => {
+    try {
+      const response = await fetch('/api/user/api-usage', { 
+        headers: getAuthHeaders() 
+      })
+      
+      if (response.ok) {
+        const usage = await response.json()
+        setApiUsage(usage)
+      } else {
+        console.error('Erreur lors du chargement de l\'utilisation API:', response.status)
+        // Ne pas afficher d'erreur si l'utilisateur n'a pas de clé API
+        if (response.status !== 404) {
+          toast.error('Erreur lors du chargement de l\'utilisation API')
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'utilisation API:', error)
+    } finally {
+      setApiUsageLoading(false)
     }
   }
 
@@ -345,7 +355,7 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Informations utilisateur */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sticky top-20">
             <div className="text-center">
               <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl font-bold text-white">
@@ -397,39 +407,90 @@ export default function ProfilePage() {
         {/* Statistiques */}
         <div className="lg:col-span-2">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Statistiques</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">📊 Statistiques</h3>
             
             {stats && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalTodos}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">Total todos</div>
+              <div className="space-y-6">
+                {/* Statistiques principales */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalTodos}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Total todos</div>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completed}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Terminés</div>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.pending}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">En cours</div>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.overdue}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">En retard</div>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.highPriority}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Priorité haute</div>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.totalCategories}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Catégories</div>
+                  </div>
                 </div>
-                
-                <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completed}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">Terminés</div>
+
+                {/* Nouvelle ligne pour les projets */}
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                  <div className="text-center p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
+                    <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">{stats.totalProjects}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Projets accessibles</div>
+                  </div>
                 </div>
-                
-                <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.pending}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">En cours</div>
-                </div>
-                
-                <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.overdue}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">En retard</div>
-                </div>
-                
-                <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.highPriority}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">Priorité haute</div>
-                </div>
-                
-                <div className="text-center p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.totalCategories}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">Catégories</div>
-                </div>
+
+                {/* Todos récents */}
+                {stats.recentTodos && stats.recentTodos.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">🕒 Todos récents</h4>
+                    <div className="space-y-2">
+                      {stats.recentTodos.map((todo) => (
+                        <div key={todo.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div 
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: todo.project?.color || '#3B82F6' }}
+                            />
+                            <div>
+                              <div className={`font-medium ${todo.completed ? 'line-through text-gray-500' : 'text-gray-900 dark:text-white'}`}>
+                                {todo.title}
+                              </div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                                {todo.project?.emoji} {todo.project?.name}
+                                {todo.category && ` • ${todo.category.name}`}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {todo.priority === 'high' && (
+                              <span className="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 text-xs rounded-full">
+                                Haute
+                              </span>
+                            )}
+                            {todo.completed ? (
+                              <span className="text-green-500">✓</span>
+                            ) : (
+                              <span className="text-gray-400">○</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -528,6 +589,306 @@ export default function ProfilePage() {
             </div>
           </button>
         </div>
+      </div>
+
+      {/* Utilisation de l'API */}
+      <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+            <svg className="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Utilisation de l'API
+          </h3>
+          <Link
+            href="/api"
+            className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+          >
+            Documentation →
+          </Link>
+        </div>
+
+        {apiUsageLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <svg className="animate-spin h-8 w-8 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+        ) : apiUsage ? (
+          <div className="space-y-6">
+            {/* Plan et utilisation */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Plan actuel */}
+              <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-purple-900 dark:text-purple-300">Plan {apiUsage.plan.name}</h4>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    apiUsage.plan.type === 'pro' 
+                      ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                  }`}>
+                    {apiUsage.plan.type === 'pro' ? 'PRO' : 'GRATUIT'}
+                  </span>
+                </div>
+                <ul className="text-sm text-purple-700 dark:text-purple-300 space-y-1 mb-4">
+                  {apiUsage.plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/pricing"
+                  className="w-full flex items-center justify-center px-3 py-2 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-700 transition-colors duration-200 text-sm font-medium"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-4 4" />
+                  </svg>
+                  Voir tous les plans
+                </Link>
+              </div>
+
+              {/* Utilisation API externe */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-3">Utilisation de l'API</h4>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-blue-700 dark:text-blue-300">Requêtes utilisées</span>
+                      <span className="font-medium text-blue-900 dark:text-blue-200">
+                        {apiUsage.usage.current.toLocaleString()} / {apiUsage.usage.limit.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          apiUsage.usage.percentage > 80 ? 'bg-red-500' : 
+                          apiUsage.usage.percentage > 60 ? 'bg-orange-500' : 'bg-blue-500'
+                        }`}
+                        style={{ width: `${Math.min(apiUsage.usage.percentage, 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-blue-600 dark:text-blue-400 mt-1">
+                      <span>{apiUsage.usage.percentage.toFixed(1)}% utilisé</span>
+                      <span>{apiUsage.usage.remaining.toLocaleString()} restantes</span>
+                    </div>
+                  </div>
+                  <div className="text-xs text-blue-600 dark:text-blue-400">
+                    Réinitialisation le {new Date(apiUsage.usage.resetDate).toLocaleDateString('fr-FR')}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Statistiques détaillées */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {apiUsage.statistics.totalRequests.toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Total requêtes</div>
+              </div>
+              
+              <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {apiUsage.statistics.averageResponseTime}ms
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Temps moyen</div>
+              </div>
+              
+              <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                  {apiUsage.rateLimit.requestsPerMinute}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Limite/min</div>
+              </div>
+              
+              <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  {apiUsage.statistics.totalRequests > 0 ? 
+                    Math.round(((apiUsage.statistics.responseCodes['200'] || 0) / apiUsage.statistics.totalRequests) * 100) : 0}%
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Taux de succès</div>
+              </div>
+            </div>
+
+            {/* Endpoints les plus utilisés */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Endpoints API */}
+              <div>
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3" />
+                  </svg>
+                  Endpoints les plus utilisés
+                </h4>
+                <div className="space-y-2">
+                  {apiUsage.statistics.topEndpoints.length > 0 ? apiUsage.statistics.topEndpoints.map((endpoint, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center space-x-3">
+                        <span className={`px-2 py-1 text-xs font-medium rounded ${
+                          endpoint.method === 'GET' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                          endpoint.method === 'POST' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                          'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300'
+                        }`}>
+                          {endpoint.method}
+                        </span>
+                        <code className="text-sm font-mono text-gray-700 dark:text-gray-300">
+                          {endpoint.endpoint}
+                        </code>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {endpoint.requests.toLocaleString()}
+                      </span>
+                    </div>
+                  )) : (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3" />
+                      </svg>
+                      <p>Aucune requête API encore</p>
+                      <p className="text-sm">Commencez à utiliser votre clé API</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Codes de réponse */}
+              <div>
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Codes de réponse
+                </h4>
+                <div className="space-y-2">
+                  {Object.keys(apiUsage.statistics.responseCodes).length > 0 ? Object.entries(apiUsage.statistics.responseCodes).map(([code, count]) => (
+                    <div key={code} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <span className={`px-2 py-1 text-xs font-medium rounded ${
+                          code.startsWith('2') ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                          code.startsWith('4') ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' :
+                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                        }`}>
+                          {code}
+                        </span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          {code === '200' ? 'Succès' :
+                           code === '201' ? 'Créé' :
+                           code === '400' ? 'Requête invalide' :
+                           code === '401' ? 'Non autorisé' :
+                           code === '500' ? 'Erreur serveur' : 'Autre'}
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {count.toLocaleString()}
+                      </span>
+                    </div>
+                  )) : (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      <p>Aucune donnée disponible</p>
+                      <p className="text-sm">Les statistiques apparaîtront après utilisation</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Graphique des 7 derniers jours */}
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                <svg className="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Utilisation des 7 derniers jours
+              </h4>
+              <div className="grid grid-cols-7 gap-2">
+                {apiUsage.statistics.last7Days.map((day, index) => {
+                  const maxRequests = Math.max(...apiUsage.statistics.last7Days.map(d => d.requests))
+                  const height = maxRequests > 0 ? (day.requests / maxRequests) * 100 : 0
+                  
+                  // Créer une date UTC à partir de la chaîne de date
+                  const dateUTC = new Date(day.date + 'T00:00:00.000Z')
+                  
+                  // Vérifier si c'est aujourd'hui
+                  const today = new Date()
+                  const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
+                  const isToday = dateUTC.getTime() === todayUTC.getTime()
+                  
+                  // Affichage conditionnel
+                  let displayText
+                  let tooltipText
+                  
+                  if (isToday) {
+                    displayText = "Aujourd'hui"
+                    tooltipText = `Aujourd'hui - ${day.requests} requêtes`
+                  } else {
+                    // Format "Lun 14/05"
+                    const dayName = dateUTC.toLocaleDateString('fr-FR', { 
+                      weekday: 'short',
+                      timeZone: 'UTC'
+                    })
+                    const dayMonth = dateUTC.toLocaleDateString('fr-FR', { 
+                      day: '2-digit',
+                      month: '2-digit',
+                      timeZone: 'UTC'
+                    })
+                    
+                    // Capitaliser la première lettre du jour
+                    const capitalizedDayName = dayName.charAt(0).toUpperCase() + dayName.slice(1)
+                    displayText = `${capitalizedDayName} ${dayMonth}`
+                    tooltipText = `${capitalizedDayName} ${dayMonth} - ${day.requests} requêtes`
+                  }
+                  
+                  return (
+                    <div key={index} className="text-center">
+                      <div className="h-20 flex items-end justify-center mb-2">
+                        <div 
+                          className="w-8 bg-indigo-500 rounded-t transition-all duration-300 hover:bg-indigo-600"
+                          style={{ height: `${Math.max(height, 5)}%` }}
+                          title={tooltipText}
+                        />
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">
+                        {displayText}
+                      </div>
+                      <div className="text-xs font-medium text-gray-900 dark:text-white">
+                        {day.requests}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Aucune clé API trouvée
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-md mx-auto">
+              Créez une clé API pour commencer à utiliser l'API CollabWave et voir vos statistiques d'utilisation.
+            </p>
+            <button
+              onClick={openApiKeyModal}
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium"
+            >
+              Créer une clé API
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal de modification du profil */}
@@ -790,7 +1151,7 @@ export default function ProfilePage() {
                 <button
                   onClick={regenerateApiKey}
                   disabled={apiKeyLoading}
-                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-all duration-200 text-sm font-medium shadow-sm"
                 >
                   {apiKeyLoading ? (
                     <span className="flex items-center">
@@ -807,7 +1168,7 @@ export default function ProfilePage() {
                 
                 <Link
                   href="/api"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 text-sm font-medium shadow-sm"
                 >
                   Voir la documentation
                 </Link>
@@ -817,7 +1178,7 @@ export default function ProfilePage() {
             <div className="text-center py-8">
               <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z" />
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">

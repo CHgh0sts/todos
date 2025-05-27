@@ -19,6 +19,7 @@ model User {
   verificationToken      String?         @unique
   verificationExpires    DateTime?
   theme                  String          @default("system") // system, light, dark
+  plan                   String          @default("free") // free, pro
   todos                  Todo[]
   categories             Category[]
   projects               Project[]
@@ -38,6 +39,8 @@ model User {
   apiKeys                ApiKey[]
   createdAt              DateTime        @default(now())
   updatedAt              DateTime        @updatedAt
+  // Relations pour les logs d'API
+  apiLogs                ApiLog[]
 }
 
 model Project {
@@ -194,6 +197,28 @@ model ApiKey {
   lastUsed  DateTime?
   active    Boolean   @default(true)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs      ApiLog[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+// Logs d'utilisation de l'API
+model ApiLog {
+  id           Int      @id @default(autoincrement())
+  apiKeyId     Int?
+  userId       Int
+  endpoint     String
+  method       String
+  statusCode   Int
+  responseTime Int // en millisecondes
+  userAgent    String?
+  ipAddress    String?
+  isInternal   Boolean  @default(false) // true pour les requêtes internes du site web
+  apiKey       ApiKey?  @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([apiKeyId, createdAt])
+  @@index([isInternal, createdAt])
 }

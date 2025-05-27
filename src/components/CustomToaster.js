@@ -8,9 +8,9 @@ export default function CustomToaster() {
 
   return (
     <Toaster 
-      position="top-right"
+      position="bottom-right"
       containerStyle={{
-        top: 70, // Décalage adapté pour la navbar dynamique
+        bottom: 20, // Décalage depuis le bas pour éviter les conflits avec d'autres éléments
       }}
       toastOptions={{
         duration: 4000,

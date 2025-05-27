@@ -38,7 +38,7 @@ export default function RootLayout({ children }) {
                   <>
                     {children}
                     <Toaster 
-                      position="top-right"
+                      position="bottom-right"
                       toastOptions={{
                         duration: 3000,
                         style: {
@@ -58,7 +58,7 @@ export default function RootLayout({ children }) {
                       {children}
                     </main>
                     <Toaster 
-                      position="top-right"
+                      position="bottom-right"
                       toastOptions={{
                         duration: 3000,
                         style: {
@@ -78,7 +78,7 @@ export default function RootLayout({ children }) {
                       {children}
                     </main>
                     <Toaster 
-                      position="top-right"
+                      position="bottom-right"
                       toastOptions={{
                         duration: 3000,
                         style: {

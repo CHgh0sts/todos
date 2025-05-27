@@ -1,37 +1,50 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
-import { verifyToken, getTokenFromRequest } from '@/lib/auth'
+import jwt from 'jsonwebtoken'
+import { PrismaClient } from '@prisma/client'
+import { withApiLogging, getAuthenticatedUser } from '@/lib/apiMiddleware'
 
-async function getUserFromRequest(request) {
-  const token = getTokenFromRequest(request)
-  if (!token) return null
-  
-  const decoded = verifyToken(token)
-  if (!decoded) return null
-  
-  return decoded.userId
-}
+const prisma = new PrismaClient()
 
-export async function GET(request) {
+async function getHandler(request) {
   try {
-    const userId = await getUserFromRequest(request)
-    if (!userId) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    const authResult = await getAuthenticatedUser(request)
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status })
     }
 
-    // Récupérer les projets propres à l'utilisateur
-    const ownProjects = await prisma.project.findMany({
+    const { user } = authResult
+    const userId = user.id
+
+    // Récupérer les projets de l'utilisateur
+    const projects = await prisma.project.findMany({
       where: {
-        userId: userId
+        OR: [
+          { userId: userId },
+          {
+            shares: {
+              some: {
+                userId: userId
+              }
+            }
+          }
+        ]
       },
       include: {
         user: {
-          select: { id: true, name: true, email: true }
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
         },
         shares: {
           include: {
             user: {
-              select: { id: true, name: true, email: true }
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
             }
           }
         },
@@ -40,92 +53,74 @@ export async function GET(request) {
             todos: true
           }
         }
-      }
-    })
-
-    // Récupérer les projets partagés avec l'utilisateur
-    const sharedProjects = await prisma.project.findMany({
-      where: {
-        shares: {
-          some: {
-            userId: userId
-          }
-        }
       },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true }
-        },
-        shares: {
-          include: {
-            user: {
-              select: { id: true, name: true, email: true }
-            }
-          }
-        },
-        _count: {
-          select: {
-            todos: true
-          }
-        }
+      orderBy: {
+        updatedAt: 'desc'
       }
     })
 
-    // Combiner et enrichir les projets avec les informations de partage
-    const allProjects = [
-      ...ownProjects.map(project => ({
-        ...project,
-        isOwner: true,
-        permission: 'admin',
-        sharedWith: project.shares
-      })),
-      ...sharedProjects.map(project => {
+    // Ajouter les propriétés isOwner et permission pour chaque projet
+    const projectsWithPermissions = projects.map(project => {
+      const isOwner = project.userId === userId
+      let permission = null
+      let sharedWith = []
+
+      if (!isOwner) {
+        // Trouver la permission de l'utilisateur actuel
         const userShare = project.shares.find(share => share.userId === userId)
-        return {
-          ...project,
-          isOwner: false,
-          permission: userShare?.permission || 'view',
-          sharedWith: project.shares
-        }
-      })
-    ]
+        permission = userShare ? userShare.permission : null
+      }
 
-    // Trier les projets par date de création (plus récents en premier)
-    const sortedProjects = allProjects.sort((a, b) => 
-      new Date(b.createdAt) - new Date(a.createdAt)
-    )
-    
-    return NextResponse.json(sortedProjects)
+      // Filtrer les partages pour ne pas inclure l'utilisateur actuel
+      sharedWith = project.shares.filter(share => share.userId !== userId)
+
+      return {
+        ...project,
+        isOwner,
+        permission,
+        sharedWith
+      }
+    })
+
+    return NextResponse.json(projectsWithPermissions)
   } catch (error) {
     console.error('Erreur lors de la récupération des projets:', error)
-    return NextResponse.json({ error: 'Erreur lors de la récupération des projets' }, { status: 500 })
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
 
-export async function POST(request) {
+async function postHandler(request) {
   try {
-    const userId = await getUserFromRequest(request)
-    if (!userId) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    const authResult = await getAuthenticatedUser(request)
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status })
     }
 
-    const { name, description, color, emoji } = await request.json()
-    
-    if (!name) {
-      return NextResponse.json({ error: 'Le nom est requis' }, { status: 400 })
+    const { user } = authResult
+    const userId = user.id
+
+    const body = await request.json()
+    const { name, description, color, emoji } = body
+
+    if (!name || !name.trim()) {
+      return NextResponse.json({ error: 'Le nom du projet est requis' }, { status: 400 })
     }
 
     const project = await prisma.project.create({
       data: {
-        name,
-        description,
+        name: name.trim(),
+        description: description?.trim() || null,
         color: color || '#3B82F6',
         emoji: emoji || '📁',
-        userId
+        userId: userId
       },
       include: {
         user: {
-          select: { id: true, name: true, email: true }
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
         },
         _count: {
           select: {
@@ -134,15 +129,13 @@ export async function POST(request) {
         }
       }
     })
-    
-    return NextResponse.json({
-      ...project,
-      isOwner: true,
-      permission: 'admin',
-      sharedWith: []
-    }, { status: 201 })
+
+    return NextResponse.json(project, { status: 201 })
   } catch (error) {
     console.error('Erreur lors de la création du projet:', error)
-    return NextResponse.json({ error: 'Erreur lors de la création du projet' }, { status: 500 })
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
-} 
+}
+
+export const GET = withApiLogging(getHandler)
+export const POST = withApiLogging(postHandler) 
