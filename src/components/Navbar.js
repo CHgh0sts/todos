@@ -7,7 +7,7 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { useSocket } from '@/contexts/SocketContext'
 import { useNotificationBadges } from '@/contexts/NotificationBadgeContext'
 import NotificationBadge from './ui/NotificationBadge'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -17,61 +17,45 @@ export default function Navbar() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
-  const menuRef = useRef(null)
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollTop = window.scrollY
-      setIsScrolled(scrollTop > 20)
+      setIsScrolled(window.scrollY > 10)
     }
 
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Gestionnaire pour fermer le menu quand on clique en dehors
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsMenuOpen(false)
-      }
-    }
-
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isMenuOpen])
-
-  // Fonction pour déterminer si un lien est actif
   const isActive = (path) => {
-    if (path === '/') {
-      return pathname === '/'
-    }
+    if (path === '/') return pathname === '/'
     return pathname.startsWith(path)
   }
 
-  // Fonction pour obtenir les classes d'un lien
   const getLinkClasses = (path, isMobile = false) => {
-    const active = isActive(path)
-    const baseClasses = `flex items-center transition-all duration-300 ${
-      isScrolled && !isMobile ? 'text-sm' : ''
-    } ${
-      isMobile ? 'py-2' : ''
-    }`
+    const baseClasses = isMobile 
+      ? 'flex items-center py-2 px-2 text-sm font-medium transition-colors duration-200'
+      : 'flex items-center text-sm font-medium transition-colors duration-200'
     
-    if (active) {
-      return `${baseClasses} text-blue-600 dark:text-blue-400 relative ${
-        !isMobile ? 'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400 after:rounded-full' : 'bg-blue-50 dark:bg-blue-900/30 rounded-md px-2 -mx-2'
+    if (isActive(path)) {
+      return `${baseClasses} text-blue-600 dark:text-blue-400 ${
+        isMobile ? 'bg-blue-50 dark:bg-blue-900/30 rounded-md' : ''
       }`
     }
     
     return `${baseClasses} text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 ${
-      isMobile ? 'hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-md px-2 -mx-2' : ''
+      isMobile ? 'hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-md -mx-2' : ''
     }`
+  }
+
+  // Fonction pour gérer le clic sur un lien mobile
+  const handleMobileLinkClick = (callback) => {
+    // Exécuter le callback immédiatement
+    if (callback) callback()
+    // Fermer le menu avec un délai pour permettre la navigation
+    setTimeout(() => {
+      setIsMenuOpen(false)
+    }, 150)
   }
 
   return (
@@ -128,10 +112,7 @@ export default function Navbar() {
                   </svg>
                   Catégories
                 </Link>
-                <Link
-                  href="/api"
-                  className={getLinkClasses('/api')}
-                >
+                <Link href="/api" className={getLinkClasses('/api')}>
                   <svg className={`transition-all duration-300 ${isScrolled ? 'w-3 h-3 mr-2' : 'w-4 h-4 mr-2'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
@@ -160,7 +141,7 @@ export default function Navbar() {
                   {theme === 'system' ? '🖥️' : theme === 'light' ? '☀️' : '🌙'}
                 </button>
                 
-                <div className="relative" ref={menuRef}>
+                <div>
                   <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className={`flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 ${
@@ -284,12 +265,26 @@ export default function Navbar() {
         {/* Menu mobile ouvert */}
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
+            {/* Bouton de fermeture du menu mobile */}
+            <div className="flex justify-between items-center mb-4 px-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Menu</span>
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 p-1"
+                title="Fermer le menu"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
             {user ? (
               <div className="space-y-2">
                 <Link
                   href="/projects"
                   className={getLinkClasses('/projects', true)}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => handleMobileLinkClick(() => {})}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -299,7 +294,7 @@ export default function Navbar() {
                 <Link
                   href="/invitations"
                   className={getLinkClasses('/invitations', true)}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => handleMobileLinkClick(() => {})}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 1.05a2 2 0 001.67-1.93V4a2 2 0 00-2-2H8a2 2 0 00-2 2v3.05L3 8zm0 0v8a2 2 0 002 2h8a2 2 0 002-2V8m-13 0L21 8m0 0v8a2 2 0 01-2 2H11" />
@@ -312,7 +307,7 @@ export default function Navbar() {
                 <Link
                   href="/notifications"
                   className={getLinkClasses('/notifications', true)}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => handleMobileLinkClick(() => {})}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM15 17V7a2 2 0 00-2-2H5a2 2 0 00-2 2v13l3-3h6a2 2 0 002-2z" />
@@ -325,7 +320,7 @@ export default function Navbar() {
                 <Link
                   href="/categories"
                   className={getLinkClasses('/categories', true)}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => handleMobileLinkClick(() => {})}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -335,9 +330,9 @@ export default function Navbar() {
                 <Link
                   href="/api"
                   className={getLinkClasses('/api', true)}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => handleMobileLinkClick(() => {})}
                 >
-                  <svg className={`transition-all duration-300 ${isScrolled ? 'w-3 h-3' : 'w-4 h-4'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                   <span className="relative">
@@ -348,7 +343,7 @@ export default function Navbar() {
                 <Link
                   href="/profile"
                   className={getLinkClasses('/profile', true)}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => handleMobileLinkClick(() => {})}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -377,8 +372,7 @@ export default function Navbar() {
                 
                 <button
                   onClick={() => {
-                    logout()
-                    setIsMenuOpen(false)
+                    handleMobileLinkClick(() => logout())
                   }}
                   className="flex items-center w-full text-left py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                 >
@@ -411,14 +405,14 @@ export default function Navbar() {
                 <Link
                   href="/auth/login"
                   className={getLinkClasses('/auth/login', true)}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => handleMobileLinkClick(() => {})}
                 >
                   Connexion
                 </Link>
                 <Link
                   href="/auth/register"
                   className={getLinkClasses('/auth/register', true)}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => handleMobileLinkClick(() => {})}
                 >
                   Inscription
                 </Link>
