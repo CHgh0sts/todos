@@ -17,6 +17,8 @@
   "dependencies": {
     "@prisma/client": "^5.7.1",
     "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.6.1",
+    "dotenv": "^16.5.0",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "next": "14.0.4",
