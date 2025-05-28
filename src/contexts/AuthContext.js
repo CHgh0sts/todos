@@ -18,13 +18,37 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    checkAuth()
+    // Marquer que nous sommes côté client
+    setIsClient(true)
+    
+    // Vérifier l'authentification avec un timeout
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn('Timeout de vérification d\'authentification')
+        setLoading(false)
+      }
+    }, 5000) // Timeout de 5 secondes
+
+    checkAuth().finally(() => {
+      clearTimeout(timeoutId)
+    })
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
   }, [])
 
   const checkAuth = async () => {
     try {
+      // Ne pas vérifier l'auth si nous ne sommes pas côté client
+      if (!isClient && typeof window === 'undefined') {
+        setLoading(false)
+        return
+      }
+
       const token = Cookies.get('token')
       if (!token) {
         setLoading(false)

@@ -9,16 +9,41 @@ export default function PWAManager() {
   const [isInstalled, setIsInstalled] = useState(false)
   const [swRegistration, setSwRegistration] = useState(null)
   const [updateAvailable, setUpdateAvailable] = useState(false)
+  const [isDismissed, setIsDismissed] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
-    // Vérifier si l'app est déjà installée
-    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true)
+    // Marquer que nous sommes côté client et hydratés
+    setIsClient(true)
+    setIsHydrated(true)
+    
+    // Vérifier si l'utilisateur a déjà refusé l'installation
+    try {
+      const dismissed = localStorage.getItem('pwa-install-dismissed')
+      if (dismissed) {
+        setIsDismissed(true)
+      }
+    } catch (error) {
+      console.warn('Erreur accès localStorage:', error)
     }
 
-    // Enregistrer le service worker
-    if ('serviceWorker' in navigator) {
+    // Vérifier si l'app est déjà installée
+    try {
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true)
+      }
+    } catch (error) {
+      console.warn('Erreur vérification installation:', error)
+    }
+
+    // Enregistrer le service worker seulement en production
+    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
       registerServiceWorker()
+    } else if ('serviceWorker' in navigator && process.env.NODE_ENV === 'development') {
+      // En développement, utiliser le SW simplifié ou désactiver complètement
+      // unregisterServiceWorker() // <- décommentez cette ligne pour désactiver complètement
+      registerDevServiceWorker() // <- commentez cette ligne pour désactiver complètement
     }
 
     // Écouter l'événement beforeinstallprompt
@@ -88,6 +113,37 @@ export default function PWAManager() {
     }
   }
 
+  const registerDevServiceWorker = async () => {
+    try {
+      // D'abord, désactiver tous les service workers existants
+      await unregisterServiceWorker()
+      
+      // Ensuite, enregistrer le SW de développement simplifié
+      const registration = await navigator.serviceWorker.register('/sw-dev.js', {
+        scope: '/'
+      })
+
+      setSwRegistration(registration)
+      console.log('✅ Service Worker DEV enregistré avec succès')
+    } catch (error) {
+      console.error('❌ Erreur enregistrement Service Worker DEV:', error)
+      // Si ça échoue, désactiver complètement
+      await unregisterServiceWorker()
+    }
+  }
+
+  const unregisterServiceWorker = async () => {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations()
+      for (const registration of registrations) {
+        await registration.unregister()
+      }
+      console.log('✅ Service Worker désactivé avec succès')
+    } catch (error) {
+      console.error('❌ Erreur désactivation Service Worker:', error)
+    }
+  }
+
   const handleInstall = async () => {
     if (!deferredPrompt) return
 
@@ -123,11 +179,18 @@ export default function PWAManager() {
 
   const dismissInstall = () => {
     setShowInstallButton(false)
+    setIsDismissed(true)
+    try {
+      if (isClient) {
     localStorage.setItem('pwa-install-dismissed', 'true')
+      }
+    } catch (error) {
+      console.warn('Erreur sauvegarde localStorage:', error)
+    }
   }
 
-  // Ne pas afficher si déjà installé ou si l'utilisateur a refusé
-  if (isInstalled || localStorage.getItem('pwa-install-dismissed')) {
+  // Ne pas afficher pendant l'hydratation ou si pas côté client
+  if (!isHydrated || !isClient || isInstalled || isDismissed) {
     return null
   }
 
@@ -233,8 +296,12 @@ export function usePWA() {
 
   useEffect(() => {
     // Vérifier si installé
+    try {
     if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true)
+      }
+    } catch (error) {
+      console.warn('Erreur vérification PWA:', error)
     }
 
     // Écouter le statut de connexion

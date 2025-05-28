@@ -104,7 +104,6 @@ export default function RootLayout({ children }) {
                     <CookieConsent />
                     <PWAManager />
                     <ConnectionStatus />
-                    {isDevelopment && <SocketDiagnostic />}
                   </>
                 ) : isFullWidthPage ? (
                   // Layout pour les pages pleine largeur (avec navbar mais sans container)
@@ -126,7 +125,6 @@ export default function RootLayout({ children }) {
                     <CookieConsent />
                     <PWAManager />
                     <ConnectionStatus />
-                    {isDevelopment && <SocketDiagnostic />}
                   </div>
                 ) : (
                   // Layout normal pour les autres pages
@@ -148,7 +146,6 @@ export default function RootLayout({ children }) {
                     <CookieConsent />
                     <PWAManager />
                     <ConnectionStatus />
-                    {isDevelopment && <SocketDiagnostic />}
                   </div>
                 )}
               </NotificationBadgeProvider>

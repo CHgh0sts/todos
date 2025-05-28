@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useEffect, useState } from 'react'
 
 export default function Home() {
-  const { user, loading } = useAuth()
+  const { user } = useAuth() // Retirer loading de la destructuration
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -43,21 +43,7 @@ export default function Home() {
     return `opacity-0 translate-y-12 animate-[fade-up_1s_ease-out_forwards]`
   }
 
-  if (loading) {
-    return (
-      <div className="mx-auto">
-        <div className="animate-pulse">
-          <div className="h-12 bg-gray-300 dark:bg-gray-600 rounded mb-8"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-48 bg-gray-300 dark:bg-gray-600 rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
+  // Toujours afficher le contenu principal
   return (
     <div className="fixed inset-0 top-16 overflow-y-auto">
       <div className="min-h-screen">
@@ -198,18 +184,22 @@ export default function Home() {
               </path>
               
               <path d="M500,800 Q1000,600 1600,900" stroke="url(#purpleGradient)" strokeWidth="3" fill="none" opacity="0.15">
-                <animate attributeName="stroke-dasharray" values="1500,0;0,1500;1500,0" dur="30s" repeatCount="indefinite" />
+                <animate attributeName="stroke-dasharray" values="0,1500;1500,0;0,1500" dur="30s" repeatCount="indefinite" />
               </path>
               
-              <path d="M200,500 Q600,300 1200,600" stroke="url(#tealGradient)" strokeWidth="2" fill="none" opacity="0.12">
+              <path d="M200,400 Q900,300 1700,600" stroke="url(#tealGradient)" strokeWidth="2" fill="none" opacity="0.12">
+                <animate attributeName="stroke-dasharray" values="0,1800;1800,0;0,1800" dur="35s" repeatCount="indefinite" />
+              </path>
+              
+              <path d="M1000,200 Q500,400 100,800" stroke="url(#pinkGradient)" strokeWidth="2" fill="none" opacity="0.12">
                 <animate attributeName="stroke-dasharray" values="0,1200;1200,0;0,1200" dur="28s" repeatCount="indefinite" />
               </path>
               
-              <path d="M1000,200 Q1400,400 1800,700" stroke="url(#pinkGradient)" strokeWidth="2" fill="none" opacity="0.12">
-                <animate attributeName="stroke-dasharray" values="1200,0;0,1200;1200,0" dur="33s" repeatCount="indefinite" />
+              <path d="M1600,100 Q800,500 400,1000" stroke="url(#greenGradient)" strokeWidth="2" fill="none" opacity="0.1">
+                <animate attributeName="stroke-dasharray" values="0,1600;1600,0;0,1600" dur="32s" repeatCount="indefinite" />
               </path>
             </svg>
-        </div>
+          </div>
 
           {/* Overlay pour améliorer la lisibilité */}
           <div className="absolute inset-0 bg-white/30 dark:bg-gray-900/30"></div>
@@ -221,7 +211,7 @@ export default function Home() {
             <div className="absolute bottom-1/3 left-1/3 w-1.5 h-1.5 bg-teal-400 rounded-full opacity-30 animate-pulse" style={{animationDelay: '2s'}}></div>
             <div className="absolute top-2/3 right-1/3 w-1 h-1 bg-blue-500 rounded-full opacity-40 animate-ping" style={{animationDelay: '3s'}}></div>
             <div className="absolute bottom-1/4 right-1/5 w-2 h-2 bg-purple-500 rounded-full opacity-30 animate-pulse" style={{animationDelay: '4s'}}></div>
-      </div>
+          </div>
 
           <div className="relative mx-auto px-4 py-8 sm:py-16 lg:py-24 h-[100dvh] flex flex-col items-center justify-center">
             <div className="text-center max-w-4xl mx-auto">

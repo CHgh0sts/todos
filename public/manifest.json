@@ -4,8 +4,8 @@
   "description": "Plateforme de gestion de projets collaboratifs avec tâches, équipes et notifications en temps réel",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#3B82F6",
+  "background_color": "#111111",
+  "theme_color": "#111111",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "fr",
@@ -101,14 +101,14 @@
   "screenshots": [
     {
       "src": "/screenshots/desktop-home.png",
-      "sizes": "1280x720",
+      "sizes": "2880x1624",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Page d'accueil CollabWave"
     },
     {
       "src": "/screenshots/mobile-projects.png",
-      "sizes": "390x844",
+      "sizes": "656x1432",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Gestion des projets sur mobile"
