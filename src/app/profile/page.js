@@ -412,7 +412,7 @@ export default function ProfilePage() {
             {stats && (
               <div className="space-y-6">
                 {/* Statistiques principales */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalTodos}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">Total todos</div>
@@ -426,24 +426,24 @@ export default function ProfilePage() {
                   <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                     <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.pending}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">En cours</div>
-                  </div>
-                  
+                </div>
+                
                   <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
                     <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.overdue}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">En retard</div>
-                  </div>
-                  
+                </div>
+                
                   <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                     <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.highPriority}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">Priorité haute</div>
-                  </div>
-                  
+                </div>
+                
                   <div className="text-center p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
                     <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.totalCategories}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">Catégories</div>
                   </div>
                 </div>
-
+                
                 {/* Nouvelle ligne pour les projets */}
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                   <div className="text-center p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
@@ -451,7 +451,7 @@ export default function ProfilePage() {
                     <div className="text-sm text-gray-600 dark:text-gray-300">Projets accessibles</div>
                   </div>
                 </div>
-
+                
                 {/* Todos récents */}
                 {stats.recentTodos && stats.recentTodos.length > 0 && (
                   <div className="mt-6">
@@ -489,7 +489,7 @@ export default function ProfilePage() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                </div>
                 )}
               </div>
             )}

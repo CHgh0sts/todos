@@ -223,88 +223,87 @@ export default function Home() {
             <div className="absolute bottom-1/4 right-1/5 w-2 h-2 bg-purple-500 rounded-full opacity-30 animate-pulse" style={{animationDelay: '4s'}}></div>
       </div>
 
-          <div className="relative mx-auto px-4 sm:py-24 h-[100dvh] flex flex-col items-center justify-center">
-      <div className="text-center">
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 dark:text-white mb-6">
-                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <div className="relative mx-auto px-4 py-8 sm:py-16 lg:py-24 h-[100dvh] flex flex-col items-center justify-center">
+            <div className="text-center max-w-4xl mx-auto">
+              <h1 className="text-3xl sm:text-5xl lg:text-7xl font-extrabold text-gray-900 dark:text-white mb-4 sm:mb-6">
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent block">
                   CollabWave
                 </span>
-                <br />
-                <span className="text-3xl sm:text-4xl lg:text-5xl text-gray-700 dark:text-gray-300">
+                <span className="text-2xl sm:text-3xl lg:text-5xl text-gray-700 dark:text-gray-300 block mt-2">
                   {user ? `Bienvenue ${user.name} !` : 'Collaboratif'}
                 </span>
               </h1>
               
-              <p className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 mb-12 mx-auto leading-relaxed">
+              <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 mb-8 sm:mb-12 mx-auto leading-relaxed px-4">
                 {user 
                   ? 'Organisez vos projets, collaborez en temps réel et atteignez vos objectifs avec votre équipe'
                   : 'La plateforme collaborative moderne pour gérer vos projets et tâches en équipe avec des mises à jour en temps réel'
                 }
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-        {user ? (
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-16 px-4">
+                {user ? (
                   <>
-            <Link 
+                    <Link 
                       href="/projects" 
-                      className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-            >
-                      <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                    >
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
+                      </svg>
                       Mes Projets
-            </Link>
-            <Link 
+                    </Link>
+                    <Link 
                       href="/friends" 
-                      className="inline-flex items-center px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-lg font-semibold rounded-2xl border-2 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-            >
-                      <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl border-2 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                    >
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+                      </svg>
                       Mes Amis
-            </Link>
+                    </Link>
                   </>
-        ) : (
+                ) : (
                   <>
-            <Link 
-              href="/auth/register" 
-                      className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-            >
-                      <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <Link 
+                      href="/auth/register" 
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                    >
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
+                      </svg>
                       Commencer Gratuitement
-            </Link>
-            <Link 
-              href="/auth/login" 
-                      className="inline-flex items-center px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-lg font-semibold rounded-2xl border-2 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-            >
-                      <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </Link>
+                    <Link 
+                      href="/auth/login" 
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl border-2 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                    >
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                       </svg>
                       Se Connecter
-            </Link>
+                    </Link>
                   </>
                 )}
               </div>
 
               {/* Stats ou aperçu pour les utilisateurs connectés */}
               {user && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mx-auto">
-                  <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-                    <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">📊</div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Projets</div>
-                    <div className="text-gray-600 dark:text-gray-400">Organisés et structurés</div>
+                <div className="hidden sm:grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mx-auto max-w-4xl px-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg">
+                    <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">📊</div>
+                    <div className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">Projets</div>
+                    <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Organisés et structurés</div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-                    <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">🚀</div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Temps Réel</div>
-                    <div className="text-gray-600 dark:text-gray-400">Collaboration instantanée</div>
+                  <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg">
+                    <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">🚀</div>
+                    <div className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">Temps Réel</div>
+                    <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Collaboration instantanée</div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
-                    <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">👥</div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Équipe</div>
-                    <div className="text-gray-600 dark:text-gray-400">Travail collaboratif</div>
+                  <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg">
+                    <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-2">👥</div>
+                    <div className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">Équipe</div>
+                    <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Travail collaboratif</div>
                   </div>
                 </div>
               )}
@@ -419,28 +418,53 @@ export default function Home() {
         </section>
 
         {/* Why Choose CollabWave Section */}
-        <section className="py-20 bg-gray-50 dark:bg-gray-900">
+        <section className="py-12 sm:py-20 bg-gray-50 dark:bg-gray-900">
           <div className="mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            <div className="text-center mb-12 sm:mb-16">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
                 Pourquoi Choisir <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   CollabWave
                 </span> ?
               </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-300 mx-auto">
+              <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mx-auto px-4">
                 Une expérience utilisateur pensée pour votre productivité
               </p>
             </div>
 
             {/* Timeline de l'expérience utilisateur */}
             <div className="relative timeline-container">
-              {/* Ligne centrale */}
-              <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
+              {/* Ligne centrale - cachée sur mobile */}
+              <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
               
-              <div className="space-y-16">
+              <div className="space-y-6 md:space-y-16">
                 {/* Étape 1 - Inscription */}
-                <div className="flex items-center timeline-step" data-step="1">
-                  <div className="w-1/2 pr-8 text-right">
+                <div className="md:flex md:items-center timeline-step" data-step="1">
+                  {/* Version mobile */}
+                  <div className="md:hidden mb-4">
+                    <div className="flex items-center mb-3">
+                      <div className="w-8 h-8 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center mr-3 flex-shrink-0">
+                        <span className="text-white text-sm font-bold">1</span>
+                      </div>
+                      <div className="h-px bg-gradient-to-r from-green-500 to-transparent flex-1"></div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 translate-y-12 animate-[fade-up_1s_ease-out_forwards]" style={{ animationDelay: '100ms' }}>
+                      <div className="flex items-center mb-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-white text-lg">⚡</span>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Inscription Rapide</h3>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                        Créez votre compte en 30 secondes. Aucune configuration complexe, juste votre email et c'est parti !
+                      </p>
+                      <div className="text-xs text-green-600 dark:text-green-400 font-semibold">
+                        ✓ Moins de 30 secondes
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Version desktop */}
+                  <div className="hidden md:flex md:w-1/2 md:pr-8 md:text-right">
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 translate-y-12 animate-[fade-up_1s_ease-out_forwards]" style={{ animationDelay: '100ms' }}>
                       <div className="flex items-center justify-end mb-4">
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white mr-3">Inscription Rapide</h3>
@@ -457,28 +481,53 @@ export default function Home() {
                     </div>
                   </div>
                   
-                  {/* Point central */}
-                  <div className="relative z-10">
+                  {/* Point central - desktop seulement */}
+                  <div className="hidden md:block relative z-10">
                     <div className="w-6 h-6 bg-green-500 rounded-full border-4 border-white dark:border-gray-900 timeline-point"></div>
                   </div>
                   
-                  <div className="w-1/2 pl-8">
+                  <div className="hidden md:block md:w-1/2 md:pl-8">
                     <div className="text-6xl opacity-20">1</div>
                   </div>
                 </div>
 
                 {/* Étape 2 - Premier projet */}
-                <div className="flex items-center timeline-step" data-step="2">
-                  <div className="w-1/2 pr-8">
+                <div className="md:flex md:items-center timeline-step" data-step="2">
+                  {/* Version mobile */}
+                  <div className="md:hidden mb-4">
+                    <div className="flex items-center mb-3">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center mr-3 flex-shrink-0">
+                        <span className="text-white text-sm font-bold">2</span>
+                      </div>
+                      <div className="h-px bg-gradient-to-r from-blue-500 to-transparent flex-1"></div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 translate-y-12 animate-[fade-up_1s_ease-out_forwards]" style={{ animationDelay: '200ms' }}>
+                      <div className="flex items-center mb-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-white text-lg">🚀</span>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Premier Projet</h3>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                        Interface intuitive qui vous guide naturellement. Créez votre premier projet et ajoutez des tâches sans tutoriel.
+                      </p>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
+                        ✓ Interface intuitive
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Version desktop */}
+                  <div className="hidden md:block md:w-1/2 md:pr-8">
                     <div className="text-6xl opacity-20 text-right">2</div>
                   </div>
                   
-                  {/* Point central */}
-                  <div className="relative z-10">
+                  {/* Point central - desktop seulement */}
+                  <div className="hidden md:block relative z-10">
                     <div className="w-6 h-6 bg-blue-500 rounded-full border-4 border-white dark:border-gray-900 timeline-point"></div>
                   </div>
                   
-                  <div className="w-1/2 pl-8">
+                  <div className="hidden md:flex md:w-1/2 md:pl-8">
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 translate-y-12 animate-[fade-up_1s_ease-out_forwards]" style={{ animationDelay: '200ms' }}>
                       <div className="flex items-center mb-4">
                         <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-3">
@@ -497,8 +546,33 @@ export default function Home() {
                 </div>
 
                 {/* Étape 3 - Collaboration */}
-                <div className="flex items-center timeline-step" data-step="3">
-                  <div className="w-1/2 pr-8 text-right">
+                <div className="md:flex md:items-center timeline-step" data-step="3">
+                  {/* Version mobile */}
+                  <div className="md:hidden mb-4">
+                    <div className="flex items-center mb-3">
+                      <div className="w-8 h-8 bg-purple-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center mr-3 flex-shrink-0">
+                        <span className="text-white text-sm font-bold">3</span>
+                      </div>
+                      <div className="h-px bg-gradient-to-r from-purple-500 to-transparent flex-1"></div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 translate-y-12 animate-[fade-up_1s_ease-out_forwards]" style={{ animationDelay: '300ms' }}>
+                      <div className="flex items-center mb-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-white text-lg">👥</span>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Collaboration Fluide</h3>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                        Invitez votre équipe en un clic. Voyez les modifications en temps réel sans rafraîchir la page.
+                      </p>
+                      <div className="text-xs text-purple-600 dark:text-purple-400 font-semibold">
+                        ✓ Temps réel avec Socket.IO
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Version desktop */}
+                  <div className="hidden md:flex md:w-1/2 md:pr-8 md:text-right">
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 translate-y-12 animate-[fade-up_1s_ease-out_forwards]" style={{ animationDelay: '300ms' }}>
                       <div className="flex items-center justify-end mb-4">
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white mr-3">Collaboration Fluide</h3>
@@ -515,28 +589,53 @@ export default function Home() {
                     </div>
                   </div>
                   
-                  {/* Point central */}
-                  <div className="relative z-10">
+                  {/* Point central - desktop seulement */}
+                  <div className="hidden md:block relative z-10">
                     <div className="w-6 h-6 bg-purple-500 rounded-full border-4 border-white dark:border-gray-900 timeline-point"></div>
                   </div>
                   
-                  <div className="w-1/2 pl-8">
+                  <div className="hidden md:block md:w-1/2 md:pl-8">
                     <div className="text-6xl opacity-20">3</div>
                   </div>
                 </div>
 
                 {/* Étape 4 - Productivité */}
-                <div className="flex items-center timeline-step" data-step="4">
-                  <div className="w-1/2 pr-8">
+                <div className="md:flex md:items-center timeline-step" data-step="4">
+                  {/* Version mobile */}
+                  <div className="md:hidden mb-4">
+                    <div className="flex items-center mb-3">
+                      <div className="w-8 h-8 bg-orange-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center mr-3 flex-shrink-0">
+                        <span className="text-white text-sm font-bold">4</span>
+                      </div>
+                      <div className="h-px bg-gradient-to-r from-orange-500 to-transparent flex-1"></div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 translate-y-12 animate-[fade-up_1s_ease-out_forwards]" style={{ animationDelay: '400ms' }}>
+                      <div className="flex items-center mb-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-white text-lg">📈</span>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Productivité Maximale</h3>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                        Organisez avec des catégories, filtrez par priorité, recevez des notifications intelligentes. Votre équipe est plus efficace.
+                      </p>
+                      <div className="text-xs text-orange-600 dark:text-orange-400 font-semibold">
+                        ✓ Résultats immédiats
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Version desktop */}
+                  <div className="hidden md:block md:w-1/2 md:pr-8">
                     <div className="text-6xl opacity-20 text-right">4</div>
                   </div>
                   
-                  {/* Point central */}
-                  <div className="relative z-10">
+                  {/* Point central - desktop seulement */}
+                  <div className="hidden md:block relative z-10">
                     <div className="w-6 h-6 bg-orange-500 rounded-full border-4 border-white dark:border-gray-900 timeline-point"></div>
                   </div>
                   
-                  <div className="w-1/2 pl-8">
+                  <div className="hidden md:flex md:w-1/2 md:pl-8">
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 translate-y-12 animate-[fade-up_1s_ease-out_forwards]" style={{ animationDelay: '400ms' }}>
                       <div className="flex items-center mb-4">
                         <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mr-3">

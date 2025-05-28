@@ -124,35 +124,38 @@ export default function InvitationsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mb-6 sm:mb-8">
         <Link 
           href="/projects" 
-          className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-4"
+          className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-4 sm:mb-6 text-sm sm:text-base"
         >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Retour aux projets
         </Link>
         
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">📨 Mes Invitations</h1>
-            <p className="text-gray-600 dark:text-gray-300">Gérez vos invitations de collaboration aux projets</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center">
+              <span className="text-2xl sm:text-3xl mr-2">📨</span>
+              Mes Invitations
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Gérez vos invitations de collaboration aux projets</p>
           </div>
         </div>
       </div>
 
       {/* Liste des invitations */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {invitations.length === 0 ? (
-          <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg">
-            <svg className="w-20 h-20 text-gray-400 dark:text-gray-500 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center py-12 sm:py-16 bg-white dark:bg-gray-800 rounded-lg">
+            <svg className="w-16 h-16 sm:w-20 sm:h-20 text-gray-400 dark:text-gray-500 mx-auto mb-4 sm:mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 1.05a2 2 0 001.67-1.93V4a2 2 0 00-2-2H8a2 2 0 00-2 2v3.05L3 8zm0 0v8a2 2 0 002 2h8a2 2 0 002-2V8m-13 0L21 8m0 0v8a2 2 0 01-2 2H11" />
             </svg>
-            <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">Aucune invitation</h3>
-            <p className="text-gray-500 dark:text-gray-400">Vous n'avez pas d'invitations en attente</p>
+            <h3 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white mb-2">Aucune invitation</h3>
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 px-4">Vous n'avez pas d'invitations en attente</p>
           </div>
         ) : (
           invitations.map((invitation) => (
@@ -160,65 +163,77 @@ export default function InvitationsPage() {
               key={invitation.id}
               className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden"
             >
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-4">
+              <div className="p-4 sm:p-6">
+                {/* Header de l'invitation - responsive */}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                  <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
                     <div 
-                      className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center text-xl sm:text-2xl flex-shrink-0"
                       style={{ backgroundColor: invitation.project?.color || '#3B82F6' }}
                     >
                       {invitation.project?.emoji || '📁'}
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white break-words">
                         {invitation.project?.name || 'Projet supprimé'}
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-300">
+                      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 break-words">
                         Invitation de <span className="font-medium">{invitation.sender.name}</span>
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         {formatDate(invitation.createdAt)}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPermissionColor(invitation.permission)}`}>
+                  {/* Badge de permission */}
+                  <div className="flex items-center justify-start sm:justify-end">
+                    <span className={`px-2.5 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${getPermissionColor(invitation.permission)}`}>
                       {getPermissionLabel(invitation.permission)}
                     </span>
                   </div>
                 </div>
 
+                {/* Description du projet */}
                 {invitation.project?.description && (
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 break-words">
                     {invitation.project.description}
                   </p>
                 )}
 
+                {/* Message de l'invitation */}
                 {invitation.message && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-4">
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                    <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 break-words">
                       <span className="font-medium">Message :</span> {invitation.message}
                     </p>
                   </div>
                 )}
 
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                {/* Footer avec créateur et boutons d'action */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                  <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
                     Créé par {invitation.project?.user?.name || 'Utilisateur inconnu'}
                   </div>
                   
-                  <div className="flex space-x-3">
+                  {/* Boutons d'action */}
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 order-1 sm:order-2">
                     <button
                       onClick={() => respondToInvitation(invitation.id, 'reject')}
-                      className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
+                      className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm sm:text-base flex items-center justify-center"
                     >
+                      <svg className="w-4 h-4 mr-2 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                       Refuser
                     </button>
                     <button
                       onClick={() => respondToInvitation(invitation.id, 'accept')}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                      className="flex-1 sm:flex-none px-4 py-2.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm sm:text-base flex items-center justify-center"
                     >
+                      <svg className="w-4 h-4 mr-2 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
                       Accepter
                     </button>
                   </div>

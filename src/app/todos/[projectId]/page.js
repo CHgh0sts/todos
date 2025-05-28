@@ -30,6 +30,7 @@ export default function ProjectTodosPage() {
   const [filterCategory, setFilterCategory] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
   const [filterCompleted, setFilterCompleted] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
   
   // États pour le formulaire d'ajout
   const [newTodo, setNewTodo] = useState('')
@@ -510,16 +511,16 @@ export default function ProjectTodosPage() {
             style={{ backgroundColor: project.color }}
           ></div>
           
-          <div className="p-6">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-4">
-                <span className="text-3xl">{project.emoji}</span>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{project.name}</h1>
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
+                <span className="text-2xl sm:text-3xl flex-shrink-0">{project.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white break-words">{project.name}</h1>
                   {project.description && (
-                    <p className="text-gray-600 dark:text-gray-300 mt-1">{project.description}</p>
+                    <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base break-words">{project.description}</p>
                   )}
-                  <div className="flex items-center space-x-3 mt-2">
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       project.permission === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' :
                       project.permission === 'edit' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
@@ -530,35 +531,36 @@ export default function ProjectTodosPage() {
                     
                     {project.sharedWith && project.sharedWith.length > 0 && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
-                        {project.sharedWith.length} collaborateur{project.sharedWith.length > 1 ? 's' : ''}
+                        <span className="hidden sm:inline">{project.sharedWith.length} collaborateur{project.sharedWith.length > 1 ? 's' : ''}</span>
+                        <span className="sm:hidden">{project.sharedWith.length}</span>
                       </span>
                     )}
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-end space-x-1 sm:space-x-2 flex-shrink-0">
                 {(project.isOwner || project.permission === 'admin') && (
                   <>
                     <button
                       onClick={openEditProjectModal}
-                      className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2"
+                      className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                       title="Modifier le projet"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                     </button>
                     
                     <button
                       onClick={() => setShowCollabModal(true)}
-                      className="text-purple-500 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 p-2"
+                      className="text-purple-500 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 p-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
                       title="Gérer la collaboration"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                     </button>
@@ -568,10 +570,10 @@ export default function ProjectTodosPage() {
                 {!project.isOwner && (
                   <button
                     onClick={handleLeaveProject}
-                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-2"
+                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     title="Quitter le projet"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
                   </button>
@@ -630,41 +632,61 @@ export default function ProjectTodosPage() {
         </div>
       )}
 
+      {/* Bouton d'ajout de tâche - séparé des filtres */}
+      {canAddTodos && (
+        <div className="mb-6 flex items-center justify-end">
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className={`w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg ${
+              showAddForm 
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' 
+                : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
+            }`}
+          >
+            {showAddForm ? (
+              <>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span>Annuler</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span className="text-white">Nouvelle tâche</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Barre de recherche et filtres */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
-        {/* Header avec titre et bouton d'ajout */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 sm:mb-0">🔍 Recherche & Filtres</h2>
-          {canAddTodos && (
-            <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className={`inline-flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg ${
-                showAddForm 
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' 
-                  : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
-              }`}
-            >
-              {showAddForm ? (
-                <>
-                  <svg className="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  <span className="hidden md:inline">Annuler</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  <span className="hidden md:inline">Nouvelle tâche</span>
-                </>
-              )}
-            </button>
-          )}
+        {/* Header avec titre et bouton mobile pour les filtres */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Recherche & Filtres
+          </h2>
+          
+          {/* Bouton mobile pour afficher/masquer les filtres */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="md:hidden inline-flex items-center justify-center px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+          >
+            <svg className={`w-4 h-4 mr-1 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+            <span className="text-sm">Filtres</span>
+          </button>
         </div>
         
-        {/* Filtres */}
-        <div className="p-4">
+        {/* Filtres - toujours visibles sur desktop, conditionnels sur mobile */}
+        <div className={`p-4 ${showFilters ? 'block' : 'hidden md:block'}`}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -684,7 +706,7 @@ export default function ProjectTodosPage() {
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+              className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700"
             >
               <option value="">🏷️ Toutes les catégories</option>
               {categories.map(category => (
@@ -697,7 +719,7 @@ export default function ProjectTodosPage() {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+              className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700"
             >
               <option value="">⚡ Toutes les priorités</option>
               <option value="high">🔴 Haute</option>
@@ -708,7 +730,7 @@ export default function ProjectTodosPage() {
             <select
               value={filterCompleted}
               onChange={(e) => setFilterCompleted(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+              className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700"
             >
               <option value="">📋 Tous les statuts</option>
               <option value="false">⏳ À faire</option>
@@ -726,8 +748,11 @@ export default function ProjectTodosPage() {
                   setFilterPriority('')
                   setFilterCompleted('')
                 }}
-                className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline"
+                className="inline-flex items-center justify-center px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-all duration-200"
               >
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
                 Effacer tous les filtres
               </button>
             </div>
@@ -821,7 +846,7 @@ export default function ProjectTodosPage() {
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
-              className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 font-medium"
+              className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
             >
               <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -848,12 +873,13 @@ export default function ProjectTodosPage() {
             {canAddTodos && !searchTerm && !filterCategory && !filterPriority && !filterCompleted && (
               <button
                 onClick={() => setShowAddForm(true)}
-                className="mt-4 inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="mt-4 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
               >
-                <svg className="w-5 h-5 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 <span className="hidden md:inline">Créer une tâche</span>
+                <span className="md:hidden">Créer</span>
               </button>
             )}
           </div>

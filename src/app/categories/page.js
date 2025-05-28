@@ -224,7 +224,7 @@ export default function CategoriesPage() {
           </div>
           <button
             onClick={() => setShowAddForm(true)}
-            className={`inline-flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg ${
+            className={`inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg ${
               showAddForm 
                 ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' 
                 : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800'
@@ -232,17 +232,17 @@ export default function CategoriesPage() {
           >
             {showAddForm ? (
               <>
-                <svg className="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                <span className="hidden md:inline">Annuler</span>
+                Annuler
               </>
             ) : (
               <>
-                <svg className="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <span className="hidden md:inline">{editingCategory ? 'Modifier la catégorie' : 'Nouvelle catégorie'}</span>
+                {editingCategory ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
               </>
             )}
           </button>

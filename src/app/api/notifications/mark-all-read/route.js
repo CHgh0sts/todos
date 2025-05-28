@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifyToken, getTokenFromRequest } from '@/lib/auth'
 
-export async function POST(request) {
+async function markAllAsRead(request) {
   try {
     const token = getTokenFromRequest(request)
     
@@ -38,4 +38,12 @@ export async function POST(request) {
     console.error('Erreur lors de la mise à jour des notifications:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
+}
+
+export async function POST(request) {
+  return markAllAsRead(request)
+}
+
+export async function PUT(request) {
+  return markAllAsRead(request)
 } 
