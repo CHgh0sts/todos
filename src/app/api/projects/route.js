@@ -34,7 +34,8 @@ async function getHandler(request) {
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            profileImage: true
           }
         },
         shares: {
@@ -43,7 +44,8 @@ async function getHandler(request) {
               select: {
                 id: true,
                 name: true,
-                email: true
+                email: true,
+                profileImage: true
               }
             }
           }
@@ -119,7 +121,8 @@ async function postHandler(request) {
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            profileImage: true
           }
         },
         _count: {

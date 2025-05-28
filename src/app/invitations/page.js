@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNotificationBadges } from '@/lib/hooks/useNotificationBadges'
-import { useRouter } from 'next/navigation'
+import UserAvatar from '@/components/UserAvatar'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
 
@@ -177,9 +178,11 @@ export default function InvitationsPage() {
                       <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white break-words">
                         {invitation.project?.name || 'Projet supprimé'}
                       </h3>
-                      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 break-words">
-                        Invitation de <span className="font-medium">{invitation.sender.name}</span>
-                      </p>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Invitation de</span>
+                        <UserAvatar user={invitation.sender} size="sm" />
+                        <span className="font-medium text-sm sm:text-base text-gray-900 dark:text-white">{invitation.sender.name}</span>
+                      </div>
                       <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         {formatDate(invitation.createdAt)}
                       </p>

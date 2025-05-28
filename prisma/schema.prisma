@@ -15,6 +15,7 @@ model User {
   email                  String          @unique
   name                   String
   password               String
+  profileImage           String? // URL de l'image de profil
   isVerified             Boolean         @default(false)
   verificationToken      String?         @unique
   verificationExpires    DateTime?

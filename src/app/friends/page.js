@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNotificationBadges } from '@/lib/hooks/useNotificationBadges'
 import Modal from '@/components/Modal'
+import UserAvatar from '@/components/UserAvatar'
 import Link from 'next/link'
 import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
@@ -272,11 +273,7 @@ export default function FriendsPage() {
                   <div key={friend.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold text-lg">
-                            {friend.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
+                        <UserAvatar user={friend} />
                         <div>
                           <h3 className="font-medium text-gray-900 dark:text-white">{friend.name}</h3>
                           <p className="text-sm text-gray-500 dark:text-gray-400">{friend.email}</p>
@@ -316,11 +313,7 @@ export default function FriendsPage() {
                   <div key={request.id} className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700 p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold text-lg">
-                            {request.sender.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
+                        <UserAvatar user={request.sender} />
                         <div>
                           <h3 className="font-medium text-gray-900 dark:text-white">{request.sender.name}</h3>
                           <p className="text-sm text-gray-500 dark:text-gray-400">{request.sender.email}</p>
@@ -368,11 +361,7 @@ export default function FriendsPage() {
                   <div key={request.id} className="bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-700 p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-yellow-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold text-lg">
-                            {request.receiver.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
+                        <UserAvatar user={request.receiver} />
                         <div>
                           <h3 className="font-medium text-gray-900 dark:text-white">{request.receiver.name}</h3>
                           <p className="text-sm text-gray-500 dark:text-gray-400">{request.receiver.email}</p>

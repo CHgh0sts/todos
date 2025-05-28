@@ -38,6 +38,10 @@ export default function ProfilePage() {
   const [apiUsage, setApiUsage] = useState(null)
   const [apiUsageLoading, setApiUsageLoading] = useState(true)
 
+  // États pour l'image de profil
+  const [profileImageLoading, setProfileImageLoading] = useState(false)
+  const [imagePreview, setImagePreview] = useState(null)
+
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
@@ -179,6 +183,97 @@ export default function ProfilePage() {
     } catch (error) {
       console.error('Erreur lors de la copie:', error)
       toast.error('Erreur lors de la copie')
+    }
+  }
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    // Vérifier le type de fichier
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Type de fichier non supporté. Utilisez JPG, PNG ou WebP.')
+      return
+    }
+
+    // Vérifier la taille (max 5MB)
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      toast.error('Le fichier est trop volumineux. Taille maximum : 5MB.')
+      return
+    }
+
+    setProfileImageLoading(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('profileImage', file)
+
+      const response = await fetch('/api/user/profile-image', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Cookies.get('token')}`
+        },
+        body: formData
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast.success('Image de profil mise à jour avec succès !')
+        // Rafraîchir les données utilisateur
+        await refreshUser()
+        setImagePreview(null)
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Erreur lors de l\'upload')
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'upload:', error)
+      toast.error('Erreur de connexion')
+    } finally {
+      setProfileImageLoading(false)
+      // Reset l'input file
+      event.target.value = ''
+    }
+  }
+
+  const handleImageDelete = async () => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer votre image de profil ?')) {
+      return
+    }
+
+    setProfileImageLoading(true)
+
+    try {
+      const response = await fetch('/api/user/profile-image', {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      })
+
+      if (response.ok) {
+        toast.success('Image de profil supprimée avec succès !')
+        await refreshUser()
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Erreur lors de la suppression')
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error)
+      toast.error('Erreur de connexion')
+    } finally {
+      setProfileImageLoading(false)
+    }
+  }
+
+  const handleImagePreview = (event) => {
+    const file = event.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreview(e.target.result)
+      }
+      reader.readAsDataURL(file)
     }
   }
 
@@ -357,11 +452,68 @@ export default function ProfilePage() {
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sticky top-20">
             <div className="text-center">
-              <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-white">
-                  {user.name.charAt(0).toUpperCase()}
-                </span>
+              {/* Image de profil avec upload */}
+              <div className="relative w-20 h-20 mx-auto mb-4 group">
+                {user.profileImage ? (
+                  <img
+                    src={user.profileImage}
+                    alt="Photo de profil"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+                  />
+                ) : (
+                  <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-2xl font-bold text-white">
+                      {user.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Overlay pour l'upload */}
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer">
+                  <label htmlFor="profile-image-upload" className="cursor-pointer">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </label>
+                </div>
+                
+                {/* Input file caché */}
+                <input
+                  id="profile-image-upload"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={(e) => {
+                    handleImagePreview(e)
+                    handleImageUpload(e)
+                  }}
+                  className="hidden"
+                  disabled={profileImageLoading}
+                />
+                
+                {/* Indicateur de chargement */}
+                {profileImageLoading && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                )}
               </div>
+              
+              {/* Boutons d'action pour l'image */}
+              {user.profileImage && (
+                <div className="flex justify-center space-x-2 mb-4">
+                  <button
+                    onClick={handleImageDelete}
+                    disabled={profileImageLoading}
+                    className="px-3 py-1 text-xs bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-full hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors duration-200 disabled:opacity-50"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              )}
+              
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{user.name}</h2>
               <p className="text-gray-600 dark:text-gray-300">{user.email}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">

@@ -8,6 +8,7 @@ import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
 import Modal from '@/components/Modal'
 import ProjectCollaborationModal from '@/components/ProjectCollaborationModal'
+import UserAvatar from '@/components/UserAvatar'
 
 export default function ProjectsPage() {
   const { user, loading: authLoading } = useAuth()
@@ -334,9 +335,11 @@ export default function ProjectsPage() {
                 {/* Info propriétaire si pas le sien */}
                 {!project.isOwner && (
                   <div className="mb-4 pb-4 border-b border-gray-100 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Créé par {project.user.name}
-                    </p>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Créé par</span>
+                      <UserAvatar user={project.user} size="sm" />
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{project.user.name}</span>
+                    </div>
                   </div>
                 )}
 

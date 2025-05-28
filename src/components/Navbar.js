@@ -64,7 +64,7 @@ export default function Navbar() {
         ? 'bg-white/90 dark:bg-gray-800/90 border-gray-200/80 dark:border-gray-700/80' 
         : 'bg-white/95 dark:bg-gray-800/95 border-gray-200 dark:border-gray-700'
     }`}>
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className={`flex justify-between items-center transition-all duration-300 ${
           isScrolled ? 'h-10' : 'h-16'
         }`}>
@@ -77,7 +77,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className={`hidden md:flex items-center transition-all duration-300 ${
+          <div className={`hidden lg:flex items-center transition-all duration-300 ${
             isScrolled ? 'space-x-3' : 'space-x-6'
           }`}>
             {user ? (
@@ -250,7 +250,7 @@ export default function Navbar() {
           </div>
 
           {/* Menu mobile */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
@@ -264,7 +264,7 @@ export default function Navbar() {
 
         {/* Menu mobile ouvert */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="lg:hidden py-4 border-t border-gray-200 dark:border-gray-700">
             {/* Bouton de fermeture du menu mobile */}
             <div className="flex justify-between items-center mb-4 px-2">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Menu</span>
