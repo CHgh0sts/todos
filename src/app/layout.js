@@ -53,12 +53,14 @@ export default function RootLayout({ children }) {
         <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
 
-        {/* Icônes génériques */}
-        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+        {/* Favicon principal */}
+        <link rel="icon" type="image/png" href="/icons/icon-128x128.png" />
+        <link rel="icon" type="image/png" sizes="128x128" href="/icons/icon-128x128.png" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/icons/icon-96x96.png" />
+        <link rel="icon" type="image/png" sizes="72x72" href="/icons/icon-72x72.png" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#3B82F6" />
-        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="shortcut icon" href="/icons/icon-128x128.png" />
 
         {/* Écran de démarrage iOS */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
