@@ -44,7 +44,7 @@ export default function RootLayout({ children }) {
         <meta name="msapplication-TileColor" content="#3B82F6" />
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#3B82F6" />
-
+        
         {/* Viewport optimisé pour PWA */}
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, user-scalable=no, viewport-fit=cover" />
 

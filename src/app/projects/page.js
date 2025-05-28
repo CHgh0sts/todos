@@ -65,19 +65,61 @@ export default function ProjectsPage() {
 
   const fetchProjects = async () => {
     try {
+      console.log('🔍 [Projects Page] Début de la récupération des projets')
+      
+      const token = Cookies.get('token')
+      if (!token) {
+        console.error('❌ [Projects Page] Token manquant dans les cookies')
+        toast.error('Session expirée, veuillez vous reconnecter')
+        router.push('/auth/login')
+        return
+      }
+      
+      console.log('✅ [Projects Page] Token trouvé, longueur:', token.length)
+      
       const response = await fetch(`/api/projects`, {
         headers: getAuthHeaders()
       })
       
+      console.log('📡 [Projects Page] Réponse reçue:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      })
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('✅ [Projects Page] Projets récupérés avec succès:', { count: data.length })
         setProjects(data)
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        console.error('❌ [Projects Page] Erreur de l\'API:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        })
+        
+        if (response.status === 401) {
+          toast.error('Session expirée, veuillez vous reconnecter')
+          router.push('/auth/login')
+        } else if (response.status === 500) {
+          toast.error(`Erreur serveur: ${errorData.error || 'Erreur interne'}`)
+        } else {
+          toast.error(`Erreur lors du chargement des projets: ${errorData.error || 'Erreur inconnue'}`)
+        }
+      }
+    } catch (error) {
+      console.error('❌ [Projects Page] Erreur lors du chargement des projets:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      })
+      
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        toast.error('Erreur de connexion au serveur')
       } else {
         toast.error('Erreur lors du chargement des projets')
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement des projets:', error)
-      toast.error('Erreur lors du chargement des projets')
     } finally {
       setLoading(false)
     }

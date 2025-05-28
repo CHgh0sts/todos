@@ -14,7 +14,8 @@
     "db:seed-collab": "node prisma/seed-collaboration.js",
     "test:email": "node scripts/test-email.js",
     "clear-sw": "node scripts/clear-sw.js",
-    "restore-sw": "node scripts/restore-sw.js"
+    "restore-sw": "node scripts/restore-sw.js",
+    "diagnose": "node scripts/diagnose-production.js"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",

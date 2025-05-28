@@ -303,7 +303,7 @@ export default function Home() {
 
         {/* Features Section */}
         <section className="py-20 bg-white dark:bg-gray-800">
-          <div className="mx-auto px-4">
+          <div className="max-w-7xl mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
                 Fonctionnalités Puissantes
@@ -409,7 +409,7 @@ export default function Home() {
 
         {/* Why Choose CollabWave Section */}
         <section className="py-12 sm:py-20 bg-gray-50 dark:bg-gray-900">
-          <div className="mx-auto px-4">
+          <div className="max-w-6xl mx-auto px-4">
             <div className="text-center mb-12 sm:mb-16">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
                 Pourquoi Choisir <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -798,7 +798,7 @@ export default function Home() {
             <div className="absolute bottom-1/5 right-1/6 w-1.5 h-1.5 bg-violet-500 rounded-full opacity-40 animate-pulse" style={{animationDelay: '6s'}}></div>
           </div>
 
-          <div className="relative mx-auto px-4">
+          <div className="max-w-7xl relative mx-auto px-4">
             {/* Header */}
             <div className="text-center mb-16">
               <h2 className="text-4xl sm:text-5xl font-bold mb-6">
@@ -1138,7 +1138,7 @@ export default function Home() {
         {/* CTA Section */}
         {!user && (
           <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
-            <div className="mx-auto text-center px-4">
+            <div className="max-w-4xl mx-auto text-center px-4">
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
                 Prêt à transformer votre productivité ?
               </h2>
@@ -1163,7 +1163,7 @@ export default function Home() {
           {/* Bordure dégradée en haut */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
           
-          <div className="mx-auto px-4 py-16">
+          <div className="max-w-7xl mx-auto px-4 py-16">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {/* Logo et description */}
               <div className="lg:col-span-1">
