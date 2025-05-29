@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer'
 
-const transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransporter({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT),
   secure: true,
@@ -10,9 +10,38 @@ const transporter = nodemailer.createTransport({
   }
 })
 
+// Fonction pour obtenir l'URL de base de l'application
+const getBaseUrl = () => {
+  // 1. Variable d'environnement explicite (priorité)
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL
+  }
+  
+  // 2. Variables Vercel automatiques
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  
+  // 3. Détection basée sur l'environnement
+  if (process.env.NODE_ENV === 'production') {
+    // En production, essayer de deviner l'URL
+    if (process.env.VERCEL) {
+      // Sur Vercel, utiliser le domaine par défaut
+      return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || 'app.vercel.app'}`
+    }
+    // Fallback pour d'autres hébergeurs
+    return 'https://todo.chghosts.fr'
+  }
+  
+  // 4. Fallback développement
+  return 'http://localhost:3000'
+}
+
 // Template de base pour tous les emails
 const createEmailTemplate = (title, emoji, content, ctaButton = null) => {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const baseUrl = getBaseUrl()
+  
+  console.log('📧 [Mail] URL de base utilisée:', baseUrl)
   
   return `
     <!DOCTYPE html>
@@ -91,73 +120,83 @@ const createEmailTemplate = (title, emoji, content, ctaButton = null) => {
                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto 20px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; width: 80px; height: 80px;">
                           <tr>
                             <td align="center" valign="middle" style="width: 80px; height: 80px; text-align: center; vertical-align: middle;">
-                              <span style="font-size: 40px; line-height: 1; display: inline-block;">${emoji}</span>
+                              <span style="font-size: 40px; line-height: 1; display: inline-block;">
+                                ${emoji}
+                              </span>
                             </td>
                           </tr>
                         </table>
+                        
+                        <!-- Titre principal -->
                         <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); line-height: 1.2;">
                           ${title}
                         </h1>
-                        <p style="color: rgba(255, 255, 255, 0.9); margin: 10px 0 0; font-size: 16px; font-weight: 400; line-height: 1.4;" class="mobile-text">
-                          CollabWave - Votre plateforme de collaboration
+                        
+                        <!-- Sous-titre -->
+                        <p style="color: rgba(255, 255, 255, 0.9); margin: 15px 0 0; font-size: 16px; font-weight: 400; line-height: 1.4;" class="mobile-text">
+                          Votre plateforme de collaboration moderne
                         </p>
                       </td>
                     </tr>
                   </table>
                 </td>
               </tr>
-
+              
               <!-- Contenu principal -->
               <tr>
-                <td style="padding: 40px 30px;" class="mobile-padding">
+                <td style="padding: 50px 40px;" class="mobile-padding">
                   ${content}
                 </td>
               </tr>
-
+              
               <!-- Footer -->
               <tr>
-                <td style="background: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;" class="mobile-padding">
+                <td style="background: #f8fafc; padding: 30px 40px; border-top: 1px solid #e2e8f0;" class="mobile-padding">
                   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                     <tr>
                       <td align="center">
+                        <!-- Logo/Nom de l'entreprise -->
                         <div style="margin-bottom: 20px;">
-                          <h3 style="color: #374151; margin: 0 0 10px; font-size: 18px; font-weight: 600;">
+                          <h3 style="color: #1f2937; margin: 0; font-size: 20px; font-weight: 600;">
                             CollabWave
                           </h3>
-                          <p style="color: #6b7280; margin: 0; font-size: 14px; line-height: 1.4;" class="mobile-text">
-                            La plateforme de collaboration qui transforme vos idées en réalité
+                          <p style="color: #6b7280; margin: 5px 0 0; font-size: 14px;">
+                            Transformez vos idées en réalité
                           </p>
                         </div>
                         
-                        <div style="border-top: 1px solid #e5e7eb; padding-top: 20px;">
-                          <p style="color: #9ca3af; margin: 0; font-size: 12px; line-height: 1.5;">
-                            Vous recevez cet email car vous utilisez CollabWave.<br>
-                            Si vous avez des questions, n'hésitez pas à nous contacter.
-                          </p>
-                          <p style="color: #9ca3af; margin: 15px 0 0; font-size: 12px;">
-                            © 2024 CollabWave. Tous droits réservés.
-                          </p>
+                        <!-- Liens utiles -->
+                        <div style="margin-bottom: 20px;">
+                          <a href="${baseUrl}" style="color: #4f46e5; text-decoration: none; font-size: 14px; margin: 0 10px;">Accueil</a>
+                          <a href="${baseUrl}/help" style="color: #4f46e5; text-decoration: none; font-size: 14px; margin: 0 10px;">Aide</a>
+                          <a href="${baseUrl}/contact" style="color: #4f46e5; text-decoration: none; font-size: 14px; margin: 0 10px;">Contact</a>
                         </div>
+                        
+                        <!-- Copyright -->
+                        <p style="color: #9ca3af; margin: 0; font-size: 12px; line-height: 1.5;">
+                          © ${new Date().getFullYear()} CollabWave. Tous droits réservés.<br>
+                          Cet email a été envoyé depuis <a href="${baseUrl}" style="color: #4f46e5; text-decoration: none;">${baseUrl}</a>
+                        </p>
                       </td>
                     </tr>
                   </table>
                 </td>
               </tr>
-
             </table>
-            
           </td>
         </tr>
       </table>
-      
     </body>
     </html>
   `
 }
 
 export const sendVerificationEmail = async (to, token) => {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const baseUrl = getBaseUrl()
   const verificationLink = `${baseUrl}/auth/verify?token=${token}`
+  
+  console.log('📧 [Verification Email] Envoi vers:', to)
+  console.log('📧 [Verification Email] Lien:', verificationLink)
   
   const content = `
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -263,16 +302,21 @@ export const sendVerificationEmail = async (to, token) => {
 
 // Fonction pour envoyer des emails d'invitation de projet
 export const sendProjectInvitationEmail = async (to, projectName, inviterName, invitationLink) => {
+  const baseUrl = getBaseUrl()
+  
+  console.log('📧 [Project Invitation] Envoi vers:', to)
+  console.log('📧 [Project Invitation] Lien:', invitationLink)
+  
   const content = `
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
       <tr>
         <td align="center" style="padding-bottom: 30px;">
           <h2 style="color: #1f2937; margin: 0 0 15px; font-size: 24px; font-weight: 600; line-height: 1.3;">
-            Nouvelle invitation de collaboration ! 🎉
+            Invitation à collaborer 🤝
           </h2>
           <p style="color: #6b7280; margin: 0; font-size: 16px; line-height: 1.6; text-align: center;" class="mobile-text">
-            <strong>${inviterName}</strong> vous invite à collaborer sur le projet<br>
-            <strong style="color: #667eea;">"${projectName}"</strong>
+            <strong>${inviterName}</strong> vous invite à rejoindre le projet<br>
+            <strong style="color: #4f46e5;">"${projectName}"</strong> sur CollabWave.
           </p>
         </td>
       </tr>
@@ -282,7 +326,7 @@ export const sendProjectInvitationEmail = async (to, projectName, inviterName, i
         <td align="center" style="padding: 40px 0;">
           <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto;">
             <tr>
-              <td align="center" style="border-radius: 50px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);">
+              <td align="center" style="border-radius: 50px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); box-shadow: 0 10px 25px rgba(14, 165, 233, 0.3);">
                 <a href="${invitationLink}" class="cta-button" style="display: block; width: auto; max-width: 280px; margin: 0 auto; text-align: center; text-decoration: none; color: white; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 18px 30px; border-radius: 50px; line-height: 1.2; vertical-align: middle; box-sizing: border-box;">
                   🤝 Rejoindre le projet
                 </a>
@@ -322,8 +366,11 @@ export const sendProjectInvitationEmail = async (to, projectName, inviterName, i
 
 // Fonction pour envoyer des emails de réinitialisation de mot de passe
 export const sendPasswordResetEmail = async (to, userName, resetToken) => {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const baseUrl = getBaseUrl()
   const resetLink = `${baseUrl}/auth/reset-password?token=${resetToken}`
+  
+  console.log('📧 [Password Reset] Envoi vers:', to)
+  console.log('📧 [Password Reset] Lien:', resetLink)
   
   const content = `
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -355,18 +402,19 @@ export const sendPasswordResetEmail = async (to, userName, resetToken) => {
         </td>
       </tr>
 
-      <!-- Informations de sécurité -->
+      <!-- Informations importantes -->
       <tr>
         <td style="padding: 30px 0;">
-          <div style="background: #fef3c7; border-radius: 15px; padding: 25px; border-left: 4px solid #f59e0b;">
-            <h3 style="color: #92400e; margin: 0 0 15px; font-size: 18px; font-weight: 600; display: flex; align-items: center;">
+          <div style="background: #fef2f2; border-radius: 15px; padding: 25px; border-left: 4px solid #ef4444;">
+            <h3 style="color: #991b1b; margin: 0 0 15px; font-size: 18px; font-weight: 600; display: flex; align-items: center;">
               <span style="margin-right: 10px;">⚠️</span>
-              Important - Sécurité
+              Important à savoir
             </h3>
-            <ul style="color: #92400e; margin: 0; padding-left: 20px; line-height: 1.8;">
-              <li>Ce lien expire dans <strong>1 heure</strong> pour votre sécurité</li>
+            <ul style="color: #dc2626; margin: 0; padding-left: 20px; line-height: 1.8;">
+              <li>Ce lien expire dans <strong>1 heure</strong></li>
+              <li>Vous pouvez l'utiliser une seule fois</li>
               <li>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email</li>
-              <li>Votre mot de passe actuel reste inchangé tant que vous n'en créez pas un nouveau</li>
+              <li>Votre mot de passe actuel reste valide jusqu'à ce que vous le changiez</li>
             </ul>
           </div>
         </td>
@@ -375,14 +423,14 @@ export const sendPasswordResetEmail = async (to, userName, resetToken) => {
       <!-- Lien de secours -->
       <tr>
         <td style="padding: 25px 0;">
-          <div style="background: #f3f4f6; border-radius: 10px; padding: 20px; border: 1px solid #d1d5db;">
-            <p style="color: #374151; margin: 0 0 10px; font-size: 14px; font-weight: 600;">
-              🔗 Le bouton ne fonctionne pas ?
+          <div style="background: #fef3c7; border-radius: 10px; padding: 20px; border: 1px solid #fbbf24;">
+            <p style="color: #92400e; margin: 0 0 10px; font-size: 14px; font-weight: 600;">
+              ⚠️ Le bouton ne fonctionne pas ?
             </p>
-            <p style="color: #6b7280; margin: 0; font-size: 14px; line-height: 1.5;" class="mobile-text">
+            <p style="color: #92400e; margin: 0; font-size: 14px; line-height: 1.5;" class="mobile-text">
               Copiez et collez ce lien dans votre navigateur :
             </p>
-            <div style="background: white; border-radius: 8px; padding: 12px; margin-top: 10px; border: 1px solid #d1d5db;">
+            <div style="background: white; border-radius: 8px; padding: 12px; margin-top: 10px; border: 1px solid #fbbf24;">
               <code style="color: #1f2937; font-size: 12px; word-break: break-all; font-family: 'Courier New', monospace;">
                 ${resetLink}
               </code>

@@ -388,56 +388,6 @@ export default function AdminActivity() {
             </div>
           </div>
 
-          {/* Statistiques */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700">
-              <div className="flex items-center">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <span className="text-xl">🧭</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Navigation</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.navigation || 0}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                  <span className="text-xl">➕</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Créations</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.create || 0}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700">
-              <div className="flex items-center">
-                <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                  <span className="text-xl">✏️</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Modifications</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.edit || 0}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700">
-              <div className="flex items-center">
-                <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
-                  <span className="text-xl">🗑️</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Suppressions</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.delete || 0}</p>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Filtres */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-100 dark:border-gray-700 mb-6">
