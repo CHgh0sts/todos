@@ -17,7 +17,6 @@ export default function AdminActivity() {
   const [pagination, setPagination] = useState({})
   const [stats, setStats] = useState({})
   const [showUserDropdown, setShowUserDropdown] = useState(false)
-  const [isInitialLoad, setIsInitialLoad] = useState(true)
   const [expandedLogs, setExpandedLogs] = useState(new Set())
   const [showStickyFilters, setShowStickyFilters] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
@@ -30,28 +29,44 @@ export default function AdminActivity() {
     limit: 50
   })
 
+  console.log('🔍 [Admin Activity] État actuel:', { 
+    authLoading, 
+    loading, 
+    userRole: user?.role,
+    logsCount: logs.length 
+  })
+
   useEffect(() => {
+    console.log('🔍 [Admin Activity] useEffect auth - authLoading:', authLoading, 'user:', user?.name)
     if (!authLoading) {
       if (!user) {
+        console.log('❌ [Admin Activity] Pas d\'utilisateur, redirection vers login')
         router.push('/auth/login')
         return
       }
       
       if (!['ADMIN', 'MODERATOR'].includes(user.role)) {
+        console.log('❌ [Admin Activity] Permissions insuffisantes:', user.role)
         toast.error('Accès refusé. Permissions insuffisantes.')
         router.push('/')
         return
       }
       
-      fetchUsers()
+      console.log('✅ [Admin Activity] Utilisateur autorisé, chargement initial')
+      // Charger les données initiales
+      Promise.all([fetchUsers(), fetchLogs()]).finally(() => {
+        setLoading(false)
+      })
     }
   }, [user, authLoading, router])
 
   useEffect(() => {
-    if (user && ['ADMIN', 'MODERATOR'].includes(user.role)) {
+    console.log('🔍 [Admin Activity] useEffect filters - user:', user?.name, 'role:', user?.role)
+    if (user && ['ADMIN', 'MODERATOR'].includes(user.role) && !loading) {
+      console.log('✅ [Admin Activity] Chargement des logs avec filtres:', filters)
       fetchLogs()
     }
-  }, [filters])
+  }, [filters, user, loading])
 
   // Fermer le dropdown quand on clique ailleurs
   useEffect(() => {
@@ -98,6 +113,7 @@ export default function AdminActivity() {
 
   const fetchLogs = async () => {
     try {
+      console.log('🔍 [Admin Activity] Début fetchLogs')
       setFilterLoading(true)
       const params = new URLSearchParams()
       
@@ -105,39 +121,53 @@ export default function AdminActivity() {
         if (value) params.append(key, value)
       })
 
+      console.log('🔍 [Admin Activity] Paramètres de requête:', params.toString())
+
       const response = await fetch(`/api/admin/user-activity?${params}`, {
         headers: getAuthHeaders()
       })
       
+      console.log('🔍 [Admin Activity] Réponse API:', response.status, response.ok)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('✅ [Admin Activity] Données reçues:', {
+          logsCount: data.logs?.length,
+          pagination: data.pagination,
+          stats: data.stats
+        })
         setLogs(data.logs)
         setPagination(data.pagination)
         setStats(data.stats)
       } else {
+        console.error('❌ [Admin Activity] Erreur API:', response.status)
         toast.error('Erreur lors du chargement des logs')
       }
     } catch (error) {
-      console.error('Erreur:', error)
+      console.error('❌ [Admin Activity] Erreur fetchLogs:', error)
       toast.error('Erreur lors du chargement des logs')
     } finally {
+      console.log('🔍 [Admin Activity] Fin fetchLogs')
       setFilterLoading(false)
-      setIsInitialLoad(false)
     }
   }
 
   const fetchUsers = async () => {
     try {
+      console.log('🔍 [Admin Activity] Début fetchUsers')
       const response = await fetch('/api/admin/users', {
         headers: getAuthHeaders()
       })
 
       if (response.ok) {
         const data = await response.json()
+        console.log('✅ [Admin Activity] Utilisateurs chargés:', data.users?.length)
         setUsers(data.users || [])
+      } else {
+        console.error('❌ [Admin Activity] Erreur chargement utilisateurs:', response.status)
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des utilisateurs:', error)
+      console.error('❌ [Admin Activity] Erreur fetchUsers:', error)
     }
   }
 
@@ -350,7 +380,7 @@ export default function AdminActivity() {
     return log.from || log.to || (log.element && log.element !== 'navigation')
   }
 
-  if (authLoading || (loading && isInitialLoad)) {
+  if (authLoading || loading) {
     return (
       <div className="fixed inset-0 top-16 overflow-y-auto">
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900 flex items-center justify-center">
