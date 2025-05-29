@@ -9,8 +9,11 @@ import toast from 'react-hot-toast'
 import MiniChart from '@/components/ui/MiniChart'
 import DetailedChart from '@/components/ui/DetailedChart'
 import MaintenanceResult from '@/components/ui/MaintenanceResult'
+import { withMaintenanceCheck } from '@/lib/withMaintenanceCheck'
 
-export default function AdminSettings() {
+export default withMaintenanceCheck(AdminSettings)
+
+function AdminSettings() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -172,9 +175,13 @@ export default function AdminSettings() {
         setSettings(prev => ({ ...prev, [key]: value }))
         toast.success('Paramètre mis à jour avec succès')
         
-        // Si c'est le mode maintenance, invalider le cache
+        // Si c'est le mode maintenance, invalider le cache et émettre un événement
         if (key === 'maintenanceMode') {
-          // Optionnel: recharger la page après un délai pour voir l'effet
+          // Émettre un événement pour notifier les autres composants
+          window.dispatchEvent(new CustomEvent('maintenanceChanged', {
+            detail: { isEnabled: value, timestamp: Date.now() }
+          }))
+          
           if (value) {
             toast.success('Mode maintenance activé. Les utilisateurs non-admin seront redirigés.')
           } else {

@@ -19,44 +19,73 @@ export function withMaintenanceCheck(WrappedComponent) {
       message: ''
     })
 
-    useEffect(() => {
-      const checkMaintenance = async () => {
-        try {
-          const response = await fetch('/api/maintenance-status')
-          if (response.ok) {
-            const data = await response.json()
-            setMaintenanceCheck({
-              loading: false,
-              isEnabled: data.isEnabled,
-              message: data.message
-            })
+    const checkMaintenance = async (forceRefresh = false) => {
+      try {
+        // Ajouter un paramètre pour forcer l'actualisation du cache
+        const url = forceRefresh 
+          ? `/api/maintenance-status?refresh=${Date.now()}` 
+          : '/api/maintenance-status'
+          
+        const response = await fetch(url, {
+          cache: forceRefresh ? 'no-cache' : 'default'
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setMaintenanceCheck({
+            loading: false,
+            isEnabled: data.isEnabled,
+            message: data.message
+          })
 
-            // Si maintenance activée et utilisateur non-admin, rediriger
-            if (data.isEnabled && (!user || user.role !== 'ADMIN')) {
-              router.push('/maintenance')
-              return
-            }
-          } else {
-            setMaintenanceCheck({
-              loading: false,
-              isEnabled: false,
-              message: ''
-            })
+          // Si maintenance activée et utilisateur non-admin, rediriger
+          if (data.isEnabled && (!user || user.role !== 'ADMIN')) {
+            router.push('/maintenance')
+            return
           }
-        } catch (error) {
-          console.error('Erreur vérification maintenance:', error)
+        } else {
           setMaintenanceCheck({
             loading: false,
             isEnabled: false,
             message: ''
           })
         }
+      } catch (error) {
+        console.error('Erreur vérification maintenance:', error)
+        setMaintenanceCheck({
+          loading: false,
+          isEnabled: false,
+          message: ''
+        })
       }
+    }
 
+    useEffect(() => {
       if (!authLoading) {
         checkMaintenance()
+        
+        // Vérifier périodiquement le statut (toutes les 30 secondes)
+        const interval = setInterval(() => {
+          checkMaintenance(true) // Forcer l'actualisation
+        }, 30000)
+        
+        return () => clearInterval(interval)
       }
     }, [user, authLoading, router])
+
+    // Écouter les événements de changement de maintenance
+    useEffect(() => {
+      const handleMaintenanceChange = () => {
+        checkMaintenance(true)
+      }
+
+      // Écouter les événements personnalisés
+      window.addEventListener('maintenanceChanged', handleMaintenanceChange)
+      
+      return () => {
+        window.removeEventListener('maintenanceChanged', handleMaintenanceChange)
+      }
+    }, [])
 
     // Affichage de chargement
     if (authLoading || maintenanceCheck.loading) {
