@@ -88,7 +88,8 @@ export function AuthProvider({ children }) {
         console.log('✅ [AuthContext] Utilisateur authentifié:', {
           id: userData.id,
           name: userData.name,
-          email: userData.email
+          email: userData.email,
+          role: userData.role
         })
         setUser(userData)
         

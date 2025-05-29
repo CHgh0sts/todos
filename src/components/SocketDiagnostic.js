@@ -90,7 +90,7 @@ export default function SocketDiagnostic() {
         <div className="text-xs">
           <span className="font-medium text-gray-700 dark:text-gray-300">URL:</span>
           <span className="ml-1 text-gray-600 dark:text-gray-400 font-mono text-xs">
-            {typeof window !== 'undefined' ? window.location.origin : 'N/A'}
+            {typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : 'N/A'}
           </span>
         </div>
 

@@ -11,16 +11,21 @@ datasource db {
 }
 
 model User {
-  id                     Int             @id @default(autoincrement())
-  email                  String          @unique
-  name                   String
-  password               String
-  profileImage           String? // URL de l'image de profil
-  isVerified             Boolean         @default(false)
-  verificationToken      String?         @unique
-  verificationExpires    DateTime?
-  theme                  String          @default("system") // system, light, dark
-  plan                   String          @default("free") // free, pro
+  id                  Int       @id @default(autoincrement())
+  email               String    @unique
+  name                String
+  password            String
+  role                Role      @default(USER)
+  profileImage        String? // URL de l'image de profil
+  isVerified          Boolean   @default(false)
+  verificationToken   String?   @unique
+  verificationExpires DateTime?
+  theme               String    @default("system") // system, light, dark
+  plan                String    @default("free") // free, pro
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
   todos                  Todo[]
   categories             Category[]
   projects               Project[]
@@ -38,10 +43,12 @@ model User {
   shareLinks             ShareLink[]     @relation("ShareLinkCreator")
   // Relations pour les clés API
   apiKeys                ApiKey[]
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @updatedAt
-  // Relations pour les logs d'API
   apiLogs                ApiLog[]
+  // Relations pour l'historique d'activité
+  activityLogs           ActivityLog[]   @relation("UserActivityLogs")
+  targetActivityLogs     ActivityLog[]   @relation("TargetActivityLogs")
+  // Relations pour le nouveau système d'activité utilisateur
+  userActivities         UserActivity[]
 }
 
 model Project {
@@ -222,4 +229,62 @@ model ApiLog {
   @@index([userId, createdAt])
   @@index([apiKeyId, createdAt])
   @@index([isInternal, createdAt])
+}
+
+model ActivityLog {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  action       String // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc.
+  entity       String // USER, PROJECT, TODO, CATEGORY, etc.
+  entityId     Int? // ID de l'entité concernée
+  targetUserId Int? // ID de l'utilisateur cible (pour les actions admin)
+  details      Json? // Détails de l'action (ancien/nouveau état, etc.)
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  // Relations
+  user       User  @relation("UserActivityLogs", fields: [userId], references: [id], onDelete: Cascade)
+  targetUser User? @relation("TargetActivityLogs", fields: [targetUserId], references: [id], onDelete: SetNull)
+
+  @@map("activity_logs")
+}
+
+// Paramètres système
+model SystemSettings {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String
+  description String?
+  updatedBy   Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+// Nouveau système d'activité utilisateur
+model UserActivity {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  element   String // Navigation, Create, Edit, Delete
+  typeLog   String? // Détails de l'action (page visitée, élément créé/modifié/supprimé, etc.)
+  textLog   String? // Description textuelle de l'action
+  from      Json? // État avant l'action (pour Edit/Delete)
+  to        Json? // État après l'action (pour Create/Edit)
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("user_activities")
+}
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
 }

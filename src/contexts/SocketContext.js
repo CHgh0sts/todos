@@ -28,16 +28,8 @@ export const SocketProvider = ({ children }) => {
       if (token) {
         // Déterminer l'URL du serveur Socket.IO selon l'environnement
         const getSocketUrl = () => {
-          if (typeof window !== 'undefined') {
-            // En développement
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-              return `http://${window.location.hostname}:${window.location.port || '3000'}`
-            }
-            // En production, utiliser la même origine que la page
-            return window.location.origin
-          }
-          // Fallback
-          return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+          if (typeof window === 'undefined') return 'http://localhost:3000'
+          return `${window.location.protocol}//${window.location.host}`
         }
 
         const socketUrl = getSocketUrl()

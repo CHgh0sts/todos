@@ -221,7 +221,7 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
   }
 
   const copyShareLink = (linkId) => {
-    const url = `${window.location.origin}/share/${linkId}`
+    const url = `${window.location.protocol}//${window.location.host}/share/${linkId}`
     navigator.clipboard.writeText(url)
     toast.success('Lien copié dans le presse-papiers!')
   }
@@ -575,7 +575,7 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
                               )}
                             </div>
                             <div className="bg-gray-50 dark:bg-gray-800 rounded p-2 font-mono text-sm break-all">
-                              {`${window.location.origin}/share/${link.token}`}
+                              {`${window.location.protocol}//${window.location.host}/share/${link.token}`}
                             </div>
                           </div>
                           <div className="flex items-center gap-2 ml-4">

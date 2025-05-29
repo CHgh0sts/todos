@@ -121,7 +121,7 @@ export default function Navbar() {
                     <NotificationBadge count={badges.friends} />
                   </span>
                 </Link>
-                
+
                 {/* Bouton toggle thème */}
                 <button
                   onClick={() => {
@@ -193,6 +193,28 @@ export default function Navbar() {
                         </svg>
                         Mes amis
                       </Link>
+
+                      {/* Lien Administration pour ADMIN et MODERATOR */}
+                      {user && ['ADMIN', 'MODERATOR'].includes(user.role) && (
+                        <Link
+                          href="/admin"
+                          className={`flex items-center px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 ${
+                            isActive('/admin') 
+                              ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30' 
+                              : 'text-red-600 dark:text-red-400'
+                          }`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
+                          Administration
+                          <span className="ml-auto bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 text-xs px-2 py-1 rounded-full">
+                            {user.role}
+                          </span>
+                        </Link>
+                      )}
+
                       <button
                         onClick={() => {
                           logout()
@@ -350,6 +372,26 @@ export default function Navbar() {
                     <NotificationBadge count={badges.friends} />
                   </span>
                 </Link>
+
+                {/* Lien Administration pour ADMIN et MODERATOR */}
+                {user && ['ADMIN', 'MODERATOR'].includes(user.role) && (
+                  <Link
+                    href="/admin"
+                    className={getLinkClasses('/admin', true)}
+                    onClick={() => handleMobileLinkClick(() => {})}
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <span className="flex items-center">
+                      Administration
+                      <span className="ml-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 text-xs px-1.5 py-0.5 rounded-full">
+                        {user.role}
+                      </span>
+                    </span>
+                  </Link>
+                )}
+                
                 <Link
                   href="/profile"
                   className={getLinkClasses('/profile', true)}

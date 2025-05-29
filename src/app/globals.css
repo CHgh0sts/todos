@@ -106,6 +106,7 @@
 ::-webkit-scrollbar {
   background: var(--bgcolorprincipal);
   width: .8vh;
+  height: .8vh;
 }
 
 ::-webkit-scrollbar-thumb {

@@ -5,12 +5,38 @@ const { Server } = require('socket.io')
 const jwt = require('jsonwebtoken')
 
 const dev = process.env.NODE_ENV !== 'production'
-const hostname = process.env.HOSTNAME || (dev ? 'localhost' : '0.0.0.0')
+const hostname = process.env.HOSTNAME || '0.0.0.0'
 const port = parseInt(process.env.PORT || '3000', 10)
+
+// Fonction pour obtenir l'IP locale
+const getLocalIP = () => {
+  const { networkInterfaces } = require('os')
+  const nets = networkInterfaces()
+  
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      // Ignorer les adresses non-IPv4 et les adresses de loopback
+      if (net.family === 'IPv4' && !net.internal) {
+        return net.address
+      }
+    }
+  }
+  return 'localhost'
+}
+
+const localIP = getLocalIP()
 
 // Configuration des origines autorisées pour CORS
 const allowedOrigins = dev 
-  ? [`http://localhost:${port}`, `http://127.0.0.1:${port}`]
+  ? [
+      `http://localhost:${port}`, 
+      `http://127.0.0.1:${port}`,
+      `http://${localIP}:${port}`,
+      // Permettre toutes les IPs du réseau local pour le développement
+      /^http:\/\/192\.168\.\d+\.\d+:3000$/,
+      /^http:\/\/10\.\d+\.\d+\.\d+:3000$/,
+      /^http:\/\/172\.(1[6-9]|2\d|3[01])\.\d+\.\d+:3000$/
+    ]
   : [
       process.env.NEXT_PUBLIC_APP_URL,
       process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
@@ -104,8 +130,17 @@ app.prepare().then(() => {
     })
     .listen(port, hostname, () => {
       console.log(`🚀 Serveur prêt sur http://${hostname}:${port}`)
+      console.log(`🏠 Accès local: http://localhost:${port}`)
+      console.log(`🌐 Accès réseau: http://${localIP}:${port}`)
       console.log(`🔌 Socket.IO activé`)
-      console.log(`🌍 Origines autorisées:`, allowedOrigins)
+      console.log(`🌍 Origines autorisées:`, allowedOrigins.filter(origin => typeof origin === 'string'))
       console.log(`📦 Mode:`, dev ? 'développement' : 'production')
+      
+      if (dev) {
+        console.log(`\n📱 Pour accéder depuis un autre appareil sur le réseau:`)
+        console.log(`   • Assurez-vous que votre firewall autorise le port ${port}`)
+        console.log(`   • Utilisez l'adresse: http://${localIP}:${port}`)
+        console.log(`   • Ou scannez ce QR code avec votre téléphone`)
+      }
     })
 }) 

@@ -99,7 +99,7 @@ export default function ApiPage() {
   }
 
   const getCodeExample = (tech) => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://votre-domaine.com'
+    const baseUrl = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : 'https://votre-domaine.com'
     
     const examples = {
       javascript: `<span style="color: #6b7280;">// Récupérer tous les projets</span>

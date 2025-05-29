@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSocket } from '@/contexts/SocketContext'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
@@ -15,7 +15,12 @@ export default function ProjectTodosPage() {
   const { joinProject, leaveProject } = useSocket()
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const projectId = params.projectId
+
+  // Récupérer les paramètres URL pour le mode admin directement
+  const isAdminMode = searchParams.get('admin') === 'true'
+  const canEdit = searchParams.get('edit') === 'true'
 
   const [project, setProject] = useState(null)
   const [todos, setTodos] = useState([])
@@ -66,11 +71,16 @@ export default function ProjectTodosPage() {
     'Développement & Tech': ['💻', '📱', '⚙️', '🔧', '🖥️', '📡', '🔌', '💾'],
     'Design & Créatif': ['🎨', '🖌️', '✏️', '📐', '🎭', '🌈', '💡', '✨'],
     'Business & Finance': ['💰', '📈', '💳', '🏦', '📊', '💼', '🤝', '📞'],
-    'Éducation & Recherche': ['📚', '🎓', '🔬', '📝', '📖', '🧪', '🔍', '📑'],
+    'Éducation & Recherche': ['📚', '🎓', '🔬', '📝', '📖', '🧪', '��', '📑'],
     'Santé & Sport': ['🏋️', '🏃', '⚽', '🏀', '🎾', '🏊', '🧘', '💊'],
     'Maison & Vie': ['🏠', '🛒', '🍔', '🌱', '🧹', '🔑', '🛏️', '🚗'],
     'Voyage & Loisirs': ['✈️', '🏖️', '🎪', '🎵', '🎮', '📷', '🎬', '🎉']
   }
+
+  // Ref pour éviter les logs multiples de navigation
+  const navigationLoggedRef = useRef(false)
+  const lastLoggedRef = useRef(null)
+  const timeoutRef = useRef(null)
 
   useEffect(() => {
     if (!authLoading) {
@@ -78,6 +88,14 @@ export default function ProjectTodosPage() {
         router.push('/auth/login')
         return
       }
+      
+      // Vérifier les permissions pour le mode admin
+      if (isAdminMode && !['ADMIN', 'MODERATOR'].includes(user.role)) {
+        toast.error('Accès refusé. Permissions insuffisantes pour le mode administrateur.')
+        router.push('/projects')
+        return
+      }
+      
       if (projectId) {
         fetchProject()
         fetchTodos()
@@ -87,7 +105,7 @@ export default function ProjectTodosPage() {
         joinProject(projectId)
       }
     }
-  }, [user, authLoading, router, projectId, joinProject])
+  }, [user, authLoading, router, projectId, joinProject, isAdminMode])
 
   useEffect(() => {
     if (user && projectId) {
@@ -175,7 +193,9 @@ export default function ProjectTodosPage() {
 
   const fetchProject = async () => {
     try {
-      const response = await fetch(`/api/projects/${projectId}`, {
+      const url = `/api/projects/${projectId}${isAdminMode ? '?admin=true' : ''}`
+      
+      const response = await fetch(url, {
         headers: getAuthHeaders()
       })
       
@@ -466,11 +486,18 @@ export default function ProjectTodosPage() {
       case 'view': return 'Lecture seule'
       case 'edit': return 'Modification'
       case 'admin': return 'Administration'
+      case 'super_admin': return 'Super Admin'
+      case 'moderator': return 'Modérateur'
       default: return permission
     }
   }
 
-  const canAddTodos = project && (project.permission === 'edit' || project.permission === 'admin')
+  const canAddTodos = project && (
+    project.permission === 'edit' || 
+    project.permission === 'admin' || 
+    project.permission === 'super_admin' || 
+    project.permission === 'moderator'
+  )
 
   if (authLoading || loading || !project) {
     return (
@@ -495,90 +522,137 @@ export default function ProjectTodosPage() {
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <Link 
-          href="/projects" 
+          href={project?.isAdminMode ? "/admin/projects" : "/projects"}
           className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-4"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Retour aux projets
+          {project?.isAdminMode ? "Retour au dashboard admin" : "Retour aux projets"}
         </Link>
-        
-        {/* Header du projet */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6">
-          <div 
-            className="h-3"
-            style={{ backgroundColor: project.color }}
-          ></div>
-          
-          <div className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
-                <span className="text-2xl sm:text-3xl flex-shrink-0">{project.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white break-words">{project.name}</h1>
-                  {project.description && (
-                    <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base break-words">{project.description}</p>
-                  )}
-                  <div className="flex flex-wrap items-center gap-2 mt-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      project.permission === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' :
-                      project.permission === 'edit' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
-                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                    }`}>
-                      {getPermissionLabel(project.permission)}
-                    </span>
-                    
-                    {project.sharedWith && project.sharedWith.length > 0 && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-                        <svg className="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <span className="hidden sm:inline">{project.sharedWith.length} collaborateur{project.sharedWith.length > 1 ? 's' : ''}</span>
-                        <span className="sm:hidden">{project.sharedWith.length}</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
+
+        {/* Bannière mode administration */}
+        {project?.isAdminMode && (
+          <div className={`mb-4 p-4 rounded-lg border-l-4 ${
+            project.currentUserRole === 'ADMIN' 
+              ? 'bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-500' 
+              : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400 dark:border-yellow-500'
+          }`}>
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                {project.currentUserRole === 'ADMIN' ? (
+                  <svg className="w-5 h-5 text-red-400 dark:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-yellow-400 dark:text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                )}
               </div>
-              
-              <div className="flex items-center justify-end space-x-1 sm:space-x-2 flex-shrink-0">
-                {(project.isOwner || project.permission === 'admin') && (
-                  <>
-                    <button
-                      onClick={openEditProjectModal}
-                      className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                      title="Modifier le projet"
-                    >
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    
-                    <button
-                      onClick={() => setShowCollabModal(true)}
-                      className="text-purple-500 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 p-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
-                      title="Gérer la collaboration"
-                    >
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="ml-3">
+                <p className={`text-sm font-medium ${
+                  project.currentUserRole === 'ADMIN' 
+                    ? 'text-red-800 dark:text-red-200' 
+                    : 'text-yellow-800 dark:text-yellow-200'
+                }`}>
+                  Mode {project.currentUserRole === 'ADMIN' ? 'Administrateur' : 'Modérateur'} Actif
+                </p>
+                <p className={`text-xs ${
+                  project.currentUserRole === 'ADMIN' 
+                    ? 'text-red-600 dark:text-red-300' 
+                    : 'text-yellow-600 dark:text-yellow-300'
+                }`}>
+                  Vous accédez à ce projet avec des privilèges {project.currentUserRole === 'ADMIN' ? 'd\'administration' : 'de modération'}.
+                  {!project.isOwner && !project.sharedWith?.some(share => share.userId === user?.id) && 
+                    ' Vous n\'êtes pas un collaborateur normal de ce projet.'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Header du projet */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6">
+        <div 
+          className="h-3"
+          style={{ backgroundColor: project.color }}
+        ></div>
+        
+        <div className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
+              <span className="text-2xl sm:text-3xl flex-shrink-0">{project.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white break-words">{project.name}</h1>
+                {project.description && (
+                  <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base break-words">{project.description}</p>
+                )}
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    project.permission === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' :
+                    project.permission === 'super_admin' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                    project.permission === 'moderator' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                    project.permission === 'edit' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                  }`}>
+                    {getPermissionLabel(project.permission)}
+                  </span>
+                  
+                  {project.sharedWith && project.sharedWith.length > 0 && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+                      <svg className="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                    </button>
-                  </>
-                )}
-                
-                {!project.isOwner && (
+                      <span className="hidden sm:inline">{project.sharedWith.length} collaborateur{project.sharedWith.length > 1 ? 's' : ''}</span>
+                      <span className="sm:hidden">{project.sharedWith.length}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-end space-x-1 sm:space-x-2 flex-shrink-0">
+              {(project.isOwner || 
+                project.permission === 'admin' || 
+                project.permission === 'super_admin' || 
+                project.permission === 'moderator') && (
+                <>
                   <button
-                    onClick={handleLeaveProject}
-                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                    title="Quitter le projet"
+                    onClick={openEditProjectModal}
+                    className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                    title="Modifier le projet"
                   >
                     <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </button>
-                )}
-              </div>
+                  
+                  <button
+                    onClick={() => setShowCollabModal(true)}
+                    className="text-purple-500 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 p-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                    title="Gérer la collaboration"
+                  >
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </button>
+                </>
+              )}
+              
+              {!project.isOwner && !project.isAdminMode && (
+                <button
+                  onClick={handleLeaveProject}
+                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  title="Quitter le projet"
+                >
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         </div>

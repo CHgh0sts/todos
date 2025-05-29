@@ -15,7 +15,26 @@
     "test:email": "node scripts/test-email.js",
     "clear-sw": "node scripts/clear-sw.js",
     "restore-sw": "node scripts/restore-sw.js",
-    "diagnose": "node scripts/diagnose-production.js"
+    "diagnose": "node scripts/diagnose-production.js",
+    "promote-admin": "node scripts/promote-admin.js",
+    "update-user-roles": "node scripts/update-user-roles.js",
+    "check-localhost": "node scripts/check-localhost.js",
+    "network-info": "node scripts/network-access.js",
+    "test-network": "node scripts/test-network.js",
+    "test-maintenance": "node scripts/test-maintenance.js",
+    "test-system-stats": "node scripts/test-system-stats.js",
+    "test-charts": "node scripts/test-charts.js",
+    "test-auto-update": "node scripts/test-auto-update.js",
+    "test-admin-mode": "node scripts/test-admin-mode.js",
+    "test-activity": "node scripts/test-activity-tracking.js",
+    "test-activity-stats": "node scripts/test-activity-tracking.js --stats",
+    "test-activity-cleanup": "node scripts/test-activity-tracking.js --cleanup",
+    "test-todo-creation": "node scripts/test-todo-creation.js",
+    "test-recent-activities": "node scripts/test-todo-creation.js --recent",
+    "test-category-tracking": "node scripts/test-category-tracking.js",
+    "test-category-activities": "node scripts/test-category-tracking.js --show",
+    "test-edit-tracking": "node scripts/test-edit-tracking.js",
+    "test-new-logging-model": "node scripts/test-new-logging-model.js"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",
@@ -28,6 +47,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
+    "recharts": "^2.15.3",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1"
   },
@@ -37,6 +57,7 @@
     "eslint-config-next": "14.0.4",
     "postcss": "^8",
     "prisma": "^5.7.1",
+    "qrcode-terminal": "^0.12.0",
     "tailwindcss": "^3.3.0"
   },
   "prisma": {

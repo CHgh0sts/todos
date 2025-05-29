@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifyToken, getTokenFromRequest } from '@/lib/auth'
+import { logAdd, extractRequestInfo, generateTextLog } from '@/lib/userActivityLogger'
 
 async function getUserFromRequest(request) {
   const token = getTokenFromRequest(request)
@@ -52,6 +53,19 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Permissions insuffisantes pour modifier ce todo' }, { status: 403 })
     }
     
+    // Récupérer les valeurs originales AVANT modification pour le tracking
+    const originalTodo = await prisma.todo.findUnique({
+      where: { id: parseInt(id) },
+      select: {
+        title: true,
+        description: true,
+        completed: true,
+        priority: true,
+        dueDate: true,
+        categoryId: true
+      }
+    })
+
     const updatedTodo = await prisma.todo.update({
       where: {
         id: parseInt(id)
@@ -123,6 +137,30 @@ export async function PUT(request, { params }) {
         userName: updatedTodo.user.name
       })
     }
+
+    // Tracker la modification de la todo
+    const { ipAddress, userAgent } = extractRequestInfo(request)
+    
+    // Récupérer le nom de l'utilisateur pour le textLog
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true }
+    })
+    
+    const textLog = generateTextLog('tâche', 'edit', currentUser?.name || 'Utilisateur', originalTodo, updatedTodo)
+    
+    await logAdd(
+      userId,
+      'tâche',
+      'edit',
+      originalTodo,
+      updatedTodo,
+      ipAddress,
+      userAgent,
+      textLog
+    ).catch(error => {
+      console.error('Erreur lors du tracking de modification de todo:', error)
+    })
     
     return NextResponse.json(enrichedTodo)
   } catch (error) {
@@ -229,6 +267,39 @@ export async function DELETE(request, { params }) {
         todoTitle: todo.title
       })
     }
+
+    // Tracker la suppression de la todo avant de la supprimer
+    const { ipAddress, userAgent } = extractRequestInfo(request)
+    
+    // Préparer les données de l'élément supprimé
+    const deletedData = {
+      id: todo.id,
+      title: todo.title,
+      description: todo.description,
+      completed: todo.completed,
+      priority: todo.priority,
+      dueDate: todo.dueDate,
+      categoryId: todo.categoryId,
+      userId: todo.userId,
+      projectId: todo.projectId,
+      createdAt: todo.createdAt,
+      updatedAt: todo.updatedAt
+    }
+    
+    const textLog = generateTextLog('tâche', 'delete', deletingUser?.name || 'Utilisateur', deletedData, null)
+    
+    await logAdd(
+      userId,
+      'tâche',
+      'delete',
+      deletedData,
+      null,
+      ipAddress,
+      userAgent,
+      textLog
+    ).catch(error => {
+      console.error('Erreur lors du tracking de suppression de todo:', error)
+    })
     
     await prisma.todo.delete({
       where: {

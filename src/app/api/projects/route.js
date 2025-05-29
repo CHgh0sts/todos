@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
 import { withApiLogging, getAuthenticatedUser } from '@/lib/apiMiddleware'
+import { logAdd, extractRequestInfo, generateTextLog } from '@/lib/userActivityLogger'
 
 const prisma = new PrismaClient()
 
@@ -193,6 +194,36 @@ async function postHandler(request) {
           }
         }
       }
+    })
+
+    // Tracker la création du projet
+    const { ipAddress, userAgent } = extractRequestInfo(request)
+    
+    // Préparer les données de l'élément créé
+    const createdData = {
+      id: project.id,
+      name: project.name,
+      description: project.description,
+      color: project.color,
+      emoji: project.emoji,
+      userId: project.userId,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt
+    }
+    
+    const textLog = generateTextLog('projet', 'create', user.name || 'Utilisateur', null, createdData)
+    
+    await logAdd(
+      userId, 
+      'projet', 
+      'create',
+      null,
+      createdData,
+      ipAddress, 
+      userAgent,
+      textLog
+    ).catch(error => {
+      console.error('Erreur lors du tracking de création de projet:', error)
     })
 
     console.log('✅ [Projects API] Projet créé avec succès:', { projectId: project.id, projectName: project.name })

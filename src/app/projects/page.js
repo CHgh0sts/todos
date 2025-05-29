@@ -9,8 +9,9 @@ import toast from 'react-hot-toast'
 import Modal from '@/components/Modal'
 import ProjectCollaborationModal from '@/components/ProjectCollaborationModal'
 import UserAvatar from '@/components/UserAvatar'
+import { withMaintenanceCheck } from '@/lib/withMaintenanceCheck'
 
-export default function ProjectsPage() {
+function ProjectsPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [projects, setProjects] = useState([])
@@ -572,4 +573,6 @@ export default function ProjectsPage() {
       />
     </div>
   )
-} 
+}
+
+export default withMaintenanceCheck(ProjectsPage) 

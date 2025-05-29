@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { withApiLogging, getAuthenticatedUser } from '@/lib/apiMiddleware'
+import { logAdd, extractRequestInfo, generateTextLog } from '@/lib/userActivityLogger'
 
 const prisma = new PrismaClient()
 
@@ -222,6 +223,39 @@ async function postHandler(request) {
           }
         }
       }
+    })
+
+    // Tracker la création de la todo
+    const { ipAddress, userAgent } = extractRequestInfo(request)
+    
+    // Préparer les données de l'élément créé
+    const createdData = {
+      id: todo.id,
+      title: todo.title,
+      description: todo.description,
+      completed: todo.completed,
+      priority: todo.priority,
+      dueDate: todo.dueDate,
+      categoryId: todo.categoryId,
+      userId: todo.userId,
+      projectId: todo.projectId,
+      createdAt: todo.createdAt,
+      updatedAt: todo.updatedAt
+    }
+    
+    const textLog = generateTextLog('tâche', 'create', user.name || 'Utilisateur', null, createdData)
+    
+    await logAdd(
+      userId, 
+      'tâche', 
+      'create',
+      null,
+      createdData,
+      ipAddress, 
+      userAgent,
+      textLog
+    ).catch(error => {
+      console.error('Erreur lors du tracking de création de todo:', error)
     })
 
     return NextResponse.json(todo, { status: 201 })

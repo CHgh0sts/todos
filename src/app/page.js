@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useEffect, useState } from 'react'
+import { withMaintenanceCheck } from '@/lib/withMaintenanceCheck'
 
-export default function Home() {
+function Home() {
   const { user } = useAuth() // Retirer loading de la destructuration
   const [isVisible, setIsVisible] = useState(false)
 
@@ -1286,4 +1287,6 @@ export default function Home() {
       </div>
     </div>
   )
-} 
+}
+
+export default withMaintenanceCheck(Home) 

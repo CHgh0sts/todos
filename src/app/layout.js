@@ -13,6 +13,7 @@ import SocketDiagnostic from '@/components/SocketDiagnostic'
 import PWAManager from '@/components/PWAManager'
 import ConnectionStatus from '@/components/ConnectionStatus'
 import SessionManager from '@/components/SessionManager'
+import ActivityTracker from '@/components/ActivityTracker'
 import { usePathname } from 'next/navigation'
 import Head from 'next/head'
 
@@ -108,6 +109,7 @@ export default function RootLayout({ children }) {
                     <PWAManager />
                     <ConnectionStatus />
                     <SessionManager />
+                    <ActivityTracker />
                   </>
                 ) : isFullWidthPage ? (
                   // Layout pour les pages pleine largeur (avec navbar mais sans container)
@@ -130,6 +132,7 @@ export default function RootLayout({ children }) {
                     <PWAManager />
                     <ConnectionStatus />
                     <SessionManager />
+                    <ActivityTracker />
                   </div>
                 ) : (
                   // Layout normal pour les autres pages
@@ -152,6 +155,7 @@ export default function RootLayout({ children }) {
                     <PWAManager />
                     <ConnectionStatus />
                     <SessionManager />
+                    <ActivityTracker />
                   </div>
                 )}
               </NotificationBadgeProvider>

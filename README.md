@@ -11,13 +11,12 @@ Une application moderne de gestion de projets et tâches collaboratives construi
 - **Invitations par email** avec acceptation/refus
 - **Notifications automatiques** pour tous les événements
 
-### 📋 Gestion des Tâches
+### 🎯 Gestion des Tâches
 
-- **Todos organisés par projets**
-- **Catégories avec couleurs** personnalisables
-- **Priorités** (Basse, Moyenne, Haute)
-- **Dates d'échéance** avec alertes de retard
-- **Recherche et filtres** avancés
+- ✅ Création, modification et suppression de tâches
+- ✅ Organisation par projets et catégories
+- ✅ Système de priorités et dates d'échéance
+- ✅ Statuts personnalisables (À faire, En cours, Terminé)
 
 ### 👥 Collaboration
 
@@ -27,6 +26,38 @@ Une application moderne de gestion de projets et tâches collaboratives construi
   - `admin` : Gestion complète du projet
 - **Partage de projets** avec invitations
 - **Suivi des modifications** avec notifications
+- ✅ Partage de projets entre utilisateurs
+- ✅ Système d'invitations par email
+- ✅ Liens de partage temporaires
+- ✅ Gestion des permissions (Propriétaire, Éditeur, Lecteur)
+- ✅ Notifications en temps réel
+
+### 🔐 Authentification & Sécurité
+
+- ✅ Inscription et connexion sécurisées
+- ✅ Vérification par email
+- ✅ Réinitialisation de mot de passe
+- ✅ Gestion des sessions
+- ✅ Protection CSRF et validation des données
+
+### 👑 Administration
+
+- ✅ Dashboard d'administration complet
+- ✅ Gestion des utilisateurs et rôles (USER, MODERATOR, ADMIN)
+- ✅ Statistiques système en temps réel avec mises à jour automatiques
+- ✅ Graphiques interactifs et historique des métriques
+- ✅ Logs d'activité et monitoring
+- ✅ Mode maintenance
+- ✅ Outils de sauvegarde et export
+
+### 📊 Monitoring & Analytics
+
+- ✅ Métriques système en temps réel (CPU, mémoire, disque)
+- ✅ Graphiques interactifs avec filtres temporels
+- ✅ Historique des performances (100 points max)
+- ✅ Mises à jour automatiques toutes les 5 secondes
+- ✅ 8 métriques différentes disponibles
+- ✅ Interface sans clignotement lors des mises à jour
 
 ### 🎨 Interface Utilisateur
 
@@ -34,6 +65,11 @@ Une application moderne de gestion de projets et tâches collaboratives construi
 - **Mode sombre/clair** automatique ou manuel
 - **Interface responsive** pour mobile et desktop
 - **Animations fluides** et notifications toast
+- ✅ Design moderne et responsive
+- ✅ Mode sombre/clair
+- ✅ Interface intuitive
+- ✅ Notifications toast
+- ✅ Animations fluides
 
 ## 🛠️ Technologies
 
@@ -215,3 +251,42 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 ---
 
 **Développé avec ❤️ et Next.js 14**
+
+## 🌐 Accès Réseau Local
+
+### Accès depuis d'autres appareils
+
+Pour accéder à CollabWave depuis votre téléphone, tablette ou autre ordinateur sur le même réseau WiFi :
+
+```bash
+# 1. Démarrez le serveur
+npm run dev
+
+# 2. Obtenez votre IP locale et un QR code
+npm run network-info
+
+# 3. Testez la connectivité
+npm run test-network
+```
+
+Le serveur affichera automatiquement :
+
+- 🏠 **Accès local :** `http://localhost:3000`
+- 🌐 **Accès réseau :** `http://[VOTRE_IP]:3000`
+
+### Configuration Automatique
+
+- ✅ **CORS configuré** pour les réseaux locaux (192.168.x.x, 10.x.x.x, 172.x.x.x)
+- ✅ **Socket.IO** fonctionne sur le réseau local
+- ✅ **QR Code** généré automatiquement pour mobile
+- ✅ **Tests de connectivité** intégrés
+
+### Dépannage
+
+Si l'accès réseau ne fonctionne pas :
+
+1. **Vérifiez le pare-feu** (peut bloquer le port 3000)
+2. **Même réseau WiFi** requis pour tous les appareils
+3. **Utilisez l'IP exacte** affichée par le serveur
+
+📖 **Guide complet :** [docs/NETWORK_ACCESS_GUIDE.md](docs/NETWORK_ACCESS_GUIDE.md)
