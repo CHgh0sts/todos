@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
+import Link from 'next/link'
 
 export default function ApiPage() {
   const { user, loading: authLoading } = useAuth()
@@ -384,7 +385,7 @@ export default function ApiPage() {
                       )}
                       {tech.id === 'python' && (
                         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M14.25.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.77l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.17l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05-.05-1.23.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-.83H6.18l-.01-2.75-.02-.37.05-.34.11-.31.17-.28.25-.26.31-.23.38-.2.44-.18.51-.15.58-.12.64-.1.71-.06.77-.04.84-.02 1.27.05zm-6.3 1.98l-.23.33-.08.41.08.41.23.34.33.22.41.09.41-.09.33-.22.23-.34.08-.41-.08-.41-.23-.33-.33-.22-.41-.09-.41.09zm13.09 3.95l.28.06.32.12.35.18.36.27.36.35.35.47.32.59.28.73.21.88.14 1.04.05 1.23-.06 1.23-.16 1.04-.24.86-.32.71-.36.57-.4.45-.42.33-.42.24-.4.16-.36.09-.32.05-.24.02-.16-.01h-8.22v.82h5.84l.01 2.76.02.36-.05.34-.11.31-.17.29-.25.25-.31.24-.38.2-.44.17-.51.15-.58.13-.64.09-.71.07-.77.04-.84.01-1.27-.04-1.07-.14-.9-.2-.73-.25-.59-.3-.45-.33-.34-.34-.25-.34-.16-.33-.1-.3-.04-.25-.02-.2.01-.13v-5.34l.05-.64.13-.54.21-.46.26-.38.3-.32.33-.24.35-.2.35-.14.33-.1.3-.06.26-.04.21-.02.13-.01h5.84l.69-.05.59-.14.5-.21.41-.28.33-.32.27-.35.2-.36.15-.36.1-.35.07-.32.04-.28.02-.21V6.07h2.09l.14.01zm-6.47 14.25l-.23.33-.08.41.08.41.23.33.33.23.41.08.41-.08.33-.23.23-.33.08-.41-.08-.41-.23-.33-.33-.23-.41-.08-.41.08z"/>
+                          <path d="M14.25.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.77l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.17l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05-.05-1.23.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-.83H6.18l-.01-2.75-.02-.37.05-.34.11-.31.17-.28.25-.26.31-.23.38-.2.44-.18.51-.15.58-.12.64-.1.71-.06.77-.04.84-.02 1.27.05zm-6.3 1.98l-.23.33-.08.41.08.41.23.34.33.22.41.09.41-.09.33-.22.23-.34.08-.41-.08-.41-.23-.33-.33-.23-.41-.08-.41.08z"/>
                         </svg>
                       )}
                       {tech.id === 'php' && (
@@ -527,11 +528,11 @@ export default function ApiPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-6">Produit</h3>
                   <ul className="space-y-3">
-                    <li><a href="/features" className="text-gray-300 hover:text-purple-500 transition-colors">Fonctionnalités</a></li>
-                    <li><a href="/pricing" className="text-gray-300 hover:text-purple-500 transition-colors">Tarifs</a></li>
-                    <li><a href="/security" className="text-gray-300 hover:text-purple-500 transition-colors">Sécurité</a></li>
-                    <li><a href="/integrations" className="text-gray-300 hover:text-purple-500 transition-colors">Intégrations</a></li>
-                    <li><a href="/api" className="text-gray-300 hover:text-purple-500 transition-colors">API</a></li>
+                    <li><Link href="/features" className="text-gray-300 hover:text-purple-500 transition-colors">Fonctionnalités</Link></li>
+                    <li><Link href="/pricing" className="text-gray-300 hover:text-purple-500 transition-colors">Tarifs</Link></li>
+                    <li><Link href="/security" className="text-gray-300 hover:text-purple-500 transition-colors">Sécurité</Link></li>
+                    <li><Link href="/integrations" className="text-gray-300 hover:text-purple-500 transition-colors">Intégrations</Link></li>
+                    <li><Link href="/api" className="text-gray-300 hover:text-purple-500 transition-colors">API</Link></li>
                   </ul>
                 </div>
 
@@ -539,11 +540,11 @@ export default function ApiPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-6">Support</h3>
                   <ul className="space-y-3">
-                    <li><a href="/help" className="text-gray-300 hover:text-purple-500 transition-colors">Centre d'aide</a></li>
-                    <li><a href="/documentation" className="text-gray-300 hover:text-purple-500 transition-colors">Documentation</a></li>
-                    <li><a href="/tutorials" className="text-gray-300 hover:text-purple-500 transition-colors">Tutoriels</a></li>
-                    <li><a href="/contact" className="text-gray-300 hover:text-purple-500 transition-colors">Contact</a></li>
-                    <li><a href="/status" className="text-gray-300 hover:text-purple-500 transition-colors">Statut du service</a></li>
+                    <li><Link href="/help" className="text-gray-300 hover:text-purple-500 transition-colors">Centre d'aide</Link></li>
+                    <li><Link href="/documentation" className="text-gray-300 hover:text-purple-500 transition-colors">Documentation</Link></li>
+                    <li><Link href="/tutorials" className="text-gray-300 hover:text-purple-500 transition-colors">Tutoriels</Link></li>
+                    <li><Link href="/contact" className="text-gray-300 hover:text-purple-500 transition-colors">Contact</Link></li>
+                    <li><Link href="/status" className="text-gray-300 hover:text-purple-500 transition-colors">Statut du service</Link></li>
                   </ul>
                 </div>
 
@@ -551,11 +552,11 @@ export default function ApiPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-6">Entreprise</h3>
                   <ul className="space-y-3">
-                    <li><a href="/about" className="text-gray-300 hover:text-purple-500 transition-colors">À propos</a></li>
-                    <li><a href="/blog" className="text-gray-300 hover:text-purple-500 transition-colors">Blog</a></li>
-                    <li><a href="/careers" className="text-gray-300 hover:text-purple-500 transition-colors">Carrières</a></li>
-                    <li><a href="/press" className="text-gray-300 hover:text-purple-500 transition-colors">Presse</a></li>
-                    <li><a href="/partners" className="text-gray-300 hover:text-purple-500 transition-colors">Partenaires</a></li>
+                    <li><Link href="/about" className="text-gray-300 hover:text-purple-500 transition-colors">À propos</Link></li>
+                    <li><Link href="/blog" className="text-gray-300 hover:text-purple-500 transition-colors">Blog</Link></li>
+                    <li><Link href="/careers" className="text-gray-300 hover:text-purple-500 transition-colors">Carrières</Link></li>
+                    <li><Link href="/press" className="text-gray-300 hover:text-purple-500 transition-colors">Presse</Link></li>
+                    <li><Link href="/partners" className="text-gray-300 hover:text-purple-500 transition-colors">Partenaires</Link></li>
                   </ul>
                 </div>
               </div>
@@ -586,21 +587,21 @@ export default function ApiPage() {
               <div className="border-t border-gray-800 mt-8 pt-8">
                 <div className="flex flex-col lg:flex-row justify-between items-center">
                   <div className="flex flex-wrap justify-center lg:justify-start gap-6 mb-4 lg:mb-0">
-                    <a href="/privacy" className="text-gray-400 hover:text-purple-500 transition-colors text-sm">
+                    <Link href="/privacy" className="text-gray-400 hover:text-purple-500 transition-colors text-sm">
                       Politique de confidentialité
-                    </a>
-                    <a href="/terms" className="text-gray-400 hover:text-purple-500 transition-colors text-sm">
+                    </Link>
+                    <Link href="/terms" className="text-gray-400 hover:text-purple-500 transition-colors text-sm">
                       Conditions d'utilisation
-                    </a>
-                    <a href="/cookies" className="text-gray-400 hover:text-purple-500 transition-colors text-sm">
+                    </Link>
+                    <Link href="/cookies" className="text-gray-400 hover:text-purple-500 transition-colors text-sm">
                       Politique des cookies
-                    </a>
-                    <a href="/legal" className="text-gray-400 hover:text-purple-500 transition-colors text-sm">
+                    </Link>
+                    <Link href="/legal" className="text-gray-400 hover:text-purple-500 transition-colors text-sm">
                       Mentions légales
-                    </a>
-                    <a href="/gdpr" className="text-gray-400 hover:text-purple-500 transition-colors text-sm">
+                    </Link>
+                    <Link href="/gdpr" className="text-gray-400 hover:text-purple-500 transition-colors text-sm">
                       RGPD
-                    </a>
+                    </Link>
                   </div>
                   <div className="text-gray-400 text-sm">
                     © {new Date().getFullYear()} CollabWave. Tous droits réservés.
