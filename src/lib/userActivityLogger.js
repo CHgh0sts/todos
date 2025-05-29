@@ -267,6 +267,18 @@ export function generateTextLog(element, type, userName, from = null, to = null)
  * @returns {string} - Le nom de la page en français
  */
 export function mapUrlToPageName(url) {
+  // Si c'est une URL complète, extraire juste le chemin
+  let path = url
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    try {
+      const urlObj = new URL(url)
+      path = urlObj.pathname
+    } catch (error) {
+      // Si l'URL est malformée, utiliser l'URL telle quelle
+      path = url
+    }
+  }
+  
   const urlMappings = {
     // Pages principales
     '/': 'Accueil',
@@ -318,19 +330,19 @@ export function mapUrlToPageName(url) {
   }
   
   // Si c'est une URL exacte, la mapper
-  if (urlMappings[url]) {
-    return urlMappings[url]
+  if (urlMappings[path]) {
+    return urlMappings[path]
   }
   
   // Si c'est une URL avec paramètres, essayer de trouver la base
-  const baseUrl = url.split('?')[0].split('#')[0]
+  const baseUrl = path.split('?')[0].split('#')[0]
   if (urlMappings[baseUrl]) {
     return urlMappings[baseUrl]
   }
   
   // Gérer les URLs de projets avec nom de projet
-  if (url.includes(' (') && url.includes(')')) {
-    const match = url.match(/^(.+) \((.+)\)$/)
+  if (path.includes(' (') && path.includes(')')) {
+    const match = path.match(/^(.+) \((.+)\)$/)
     if (match) {
       const [, urlPart, projectName] = match
       if (urlPart.startsWith('/todos/')) {
@@ -340,21 +352,21 @@ export function mapUrlToPageName(url) {
   }
   
   // Essayer de mapper les patterns dynamiques
-  if (url.startsWith('/todos/')) {
+  if (path.startsWith('/todos/')) {
     return 'Projet'
   }
-  if (url.startsWith('/projects/')) {
+  if (path.startsWith('/projects/')) {
     return 'Détails du projet'
   }
-  if (url.startsWith('/share/')) {
+  if (path.startsWith('/share/')) {
     return 'Partage'
   }
-  if (url.startsWith('/admin/')) {
+  if (path.startsWith('/admin/')) {
     return 'Administration'
   }
   
   // Si aucun mapping trouvé, retourner le nom tel quel (pour les cas comme "Dashboard", "navigation", etc.)
-  return url.charAt(0).toUpperCase() + url.slice(1)
+  return path.charAt(0).toUpperCase() + path.slice(1)
 }
 
 export default {

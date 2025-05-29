@@ -5,6 +5,28 @@ import { logAdd, generateTextLog, extractRequestInfo } from '@/lib/userActivityL
 
 const prisma = new PrismaClient()
 
+// Fonction pour construire l'URL complète
+const getFullUrl = (request, path) => {
+  // 1. Variable d'environnement explicite (priorité)
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return `${process.env.NEXT_PUBLIC_APP_URL}${path}`
+  }
+  
+  // 2. Variables Vercel automatiques
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}${path}`
+  }
+  
+  // 3. Détection basée sur l'environnement
+  if (process.env.NODE_ENV === 'production') {
+    // En production, utiliser le domaine par défaut
+    return `https://todo.chghosts.fr${path}`
+  }
+  
+  // 4. Fallback développement
+  return `http://localhost:3000${path}`
+}
+
 export async function POST(request) {
   try {
     // Vérifier l'authentification
@@ -19,7 +41,14 @@ export async function POST(request) {
 
     // Support des deux formats : ancien (action) et nouveau (typeLog)
     const finalTypeLog = typeLog || action
-    const finalElement = element || 'navigation'
+    
+    // Pour les navigations, utiliser l'URL complète dans element
+    let finalElement = element
+    if (finalTypeLog === 'Navigation' && details?.path) {
+      finalElement = getFullUrl(request, details.path)
+    } else if (!finalElement) {
+      finalElement = 'navigation'
+    }
 
     if (!finalTypeLog) {
       return NextResponse.json({ error: 'Action ou typeLog requis' }, { status: 400 })
@@ -52,7 +81,8 @@ export async function POST(request) {
     return NextResponse.json({ 
       success: true,
       message: 'Activité enregistrée',
-      textLog
+      textLog,
+      element: finalElement
     })
 
   } catch (error) {
