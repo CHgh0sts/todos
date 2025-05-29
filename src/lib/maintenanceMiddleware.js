@@ -8,7 +8,7 @@ let maintenanceCache = {
   isEnabled: false,
   message: 'Le site est temporairement en maintenance. Veuillez réessayer plus tard.',
   lastChecked: 0,
-  cacheDuration: 30000 // 30 secondes
+  cacheDuration: 15000 // 15 secondes au lieu de 30
 }
 
 /**
@@ -20,6 +20,7 @@ export async function checkMaintenanceMode() {
   
   // Utiliser le cache si il est encore valide
   if (now - maintenanceCache.lastChecked < maintenanceCache.cacheDuration) {
+    console.log('🔧 [Maintenance] Utilisation du cache:', maintenanceCache.isEnabled ? 'ACTIVÉ' : 'DÉSACTIVÉ')
     return {
       isEnabled: maintenanceCache.isEnabled,
       message: maintenanceCache.message
@@ -27,6 +28,8 @@ export async function checkMaintenanceMode() {
   }
 
   try {
+    console.log('🔧 [Maintenance] Vérification en base de données...')
+    
     // Récupérer le paramètre de maintenance depuis la DB
     const maintenanceSetting = await prisma.systemSettings.findUnique({
       where: { key: 'maintenanceMode' }
@@ -37,23 +40,31 @@ export async function checkMaintenanceMode() {
     })
 
     // Mettre à jour le cache
+    const wasEnabled = maintenanceCache.isEnabled
     maintenanceCache.isEnabled = maintenanceSetting?.value === 'true'
     maintenanceCache.message = messageSetting?.value || maintenanceCache.message
     maintenanceCache.lastChecked = now
 
-    console.log('🔧 [Maintenance] Mode maintenance:', maintenanceCache.isEnabled ? 'ACTIVÉ' : 'DÉSACTIVÉ')
+    // Log seulement si l'état a changé
+    if (wasEnabled !== maintenanceCache.isEnabled) {
+      console.log('🔧 [Maintenance] État changé:', maintenanceCache.isEnabled ? 'ACTIVÉ' : 'DÉSACTIVÉ')
+    } else {
+      console.log('🔧 [Maintenance] État confirmé:', maintenanceCache.isEnabled ? 'ACTIVÉ' : 'DÉSACTIVÉ')
+    }
 
     return {
       isEnabled: maintenanceCache.isEnabled,
       message: maintenanceCache.message
     }
   } catch (error) {
-    console.error('❌ Erreur lors de la vérification du mode maintenance:', error)
+    console.error('❌ [Maintenance] Erreur lors de la vérification:', error)
     // En cas d'erreur, retourner l'état du cache
     return {
       isEnabled: maintenanceCache.isEnabled,
       message: maintenanceCache.message
     }
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
@@ -62,8 +73,18 @@ export async function checkMaintenanceMode() {
  * À appeler quand les paramètres sont modifiés
  */
 export function invalidateMaintenanceCache() {
+  const wasValid = (Date.now() - maintenanceCache.lastChecked) < maintenanceCache.cacheDuration
   maintenanceCache.lastChecked = 0
-  console.log('🔧 [Maintenance] Cache invalidé')
+  console.log('🔧 [Maintenance] Cache invalidé', wasValid ? '(était valide)' : '(était expiré)')
+}
+
+/**
+ * Force la mise à jour du cache
+ */
+export async function refreshMaintenanceCache() {
+  console.log('🔧 [Maintenance] Actualisation forcée du cache')
+  invalidateMaintenanceCache()
+  return await checkMaintenanceMode()
 }
 
 /**

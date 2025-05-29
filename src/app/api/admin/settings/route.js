@@ -1,171 +1,146 @@
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { withAdminAuth } from '@/lib/adminMiddleware'
-import { logActivity, ACTIONS, ENTITIES, extractRequestInfo } from '@/lib/activityLogger'
-import { invalidateMaintenanceCache } from '@/lib/maintenanceMiddleware'
+import jwt from 'jsonwebtoken'
 
 const prisma = new PrismaClient()
 
-// Paramètres par défaut du système
-const DEFAULT_SETTINGS = {
-  maintenanceMode: 'false',
-  registrationEnabled: 'true',
-  emailVerificationRequired: 'true',
-  maxProjectsPerUser: '10',
-  maxTodosPerProject: '100',
-  sessionTimeout: '7',
-  maintenanceMessage: 'Le site est temporairement en maintenance. Veuillez réessayer plus tard.'
+// Fonction pour invalider le cache du middleware
+function invalidateMiddlewareCache() {
+  // Accéder au cache du middleware (variable globale)
+  if (global.maintenanceCache) {
+    global.maintenanceCache.lastCheck = 0
+    console.log('🔧 [Settings API] Cache middleware invalidé')
+  }
 }
 
-async function getHandler(request) {
+// Fonction pour vérifier l'authentification
+async function verifyAuth(request) {
+  try {
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return { error: 'Token manquant', status: 401 }
+    }
+
+    const token = authHeader.substring(7)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, name: true, email: true, role: true }
+    })
+
+    if (!user) {
+      return { error: 'Utilisateur non trouvé', status: 401 }
+    }
+
+    if (user.role !== 'ADMIN') {
+      return { error: 'Accès refusé. Seuls les administrateurs peuvent modifier les paramètres.', status: 403 }
+    }
+
+    console.log(`✅ [Auth Middleware] Utilisateur trouvé: { userId: ${user.id}, userName: '${user.name}' }`)
+    return { user }
+  } catch (error) {
+    console.error('❌ [Auth Middleware] Erreur:', error)
+    return { error: 'Token invalide', status: 401 }
+  }
+}
+
+export async function GET(request) {
   try {
     console.log('🔍 [Settings API] Récupération des paramètres système')
     
-    // Récupérer tous les paramètres
-    const settings = await prisma.systemSettings.findMany({
-      select: {
-        key: true,
-        value: true,
-        description: true,
-        updatedAt: true
-      }
-    })
-
-    // Convertir en objet avec les valeurs par défaut
-    const settingsObject = { ...DEFAULT_SETTINGS }
-    settings.forEach(setting => {
-      settingsObject[setting.key] = setting.value
-    })
-
-    // Convertir les valeurs booléennes et numériques
-    const processedSettings = {
-      maintenanceMode: settingsObject.maintenanceMode === 'true',
-      registrationEnabled: settingsObject.registrationEnabled === 'true',
-      emailVerificationRequired: settingsObject.emailVerificationRequired === 'true',
-      maxProjectsPerUser: parseInt(settingsObject.maxProjectsPerUser),
-      maxTodosPerProject: parseInt(settingsObject.maxTodosPerProject),
-      sessionTimeout: parseInt(settingsObject.sessionTimeout),
-      maintenanceMessage: settingsObject.maintenanceMessage
+    const authResult = await verifyAuth(request)
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status })
     }
 
-    console.log('✅ [Settings API] Paramètres récupérés:', Object.keys(processedSettings))
+    const settings = await prisma.systemSettings.findMany()
     
-    return NextResponse.json({
-      settings: processedSettings,
-      lastUpdated: settings.length > 0 ? Math.max(...settings.map(s => new Date(s.updatedAt).getTime())) : null
-    })
+    const settingsObject = settings.reduce((acc, setting) => {
+      // Convertir les valeurs en types appropriés
+      if (setting.key === 'maintenanceMode' || setting.key === 'registrationEnabled' || setting.key === 'emailVerificationRequired') {
+        acc[setting.key] = setting.value === 'true'
+      } else if (setting.key === 'maxProjectsPerUser' || setting.key === 'maxTodosPerProject' || setting.key === 'sessionTimeout') {
+        acc[setting.key] = parseInt(setting.value) || 0
+      } else {
+        acc[setting.key] = setting.value || ''
+      }
+      return acc
+    }, {})
 
+    // Valeurs par défaut si les paramètres n'existent pas
+    const defaultSettings = {
+      maintenanceMode: false,
+      registrationEnabled: true,
+      emailVerificationRequired: true,
+      maxProjectsPerUser: 10,
+      maxTodosPerProject: 100,
+      sessionTimeout: 7,
+      maintenanceMessage: 'Le site est temporairement en maintenance. Veuillez réessayer plus tard.'
+    }
+
+    const finalSettings = { ...defaultSettings, ...settingsObject }
+    
+    console.log('✅ [Settings API] Paramètres récupérés:', Object.keys(finalSettings))
+    
+    return NextResponse.json({ 
+      success: true, 
+      settings: finalSettings 
+    })
   } catch (error) {
     console.error('❌ [Settings API] Erreur:', error)
-    return NextResponse.json({ error: 'Erreur lors de la récupération des paramètres' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Erreur lors de la récupération des paramètres' 
+    }, { status: 500 })
   } finally {
     await prisma.$disconnect()
   }
 }
 
-async function putHandler(request) {
+export async function PUT(request) {
   try {
-    const body = await request.json()
-    const { settings } = body
+    const authResult = await verifyAuth(request)
+    if (authResult.error) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status })
+    }
 
+    const { settings } = await request.json()
+    
     if (!settings || typeof settings !== 'object') {
-      return NextResponse.json({ error: 'Paramètres invalides' }, { status: 400 })
+      return NextResponse.json({ 
+        error: 'Paramètres invalides' 
+      }, { status: 400 })
     }
 
     console.log('🔍 [Settings API] Mise à jour des paramètres:', Object.keys(settings))
 
-    const currentUser = request.user
-    const { ipAddress, userAgent } = extractRequestInfo(request)
-
-    // Préparer les mises à jour
-    const updates = []
-    
+    // Mettre à jour chaque paramètre
     for (const [key, value] of Object.entries(settings)) {
-      if (DEFAULT_SETTINGS.hasOwnProperty(key)) {
-        // Convertir en string pour le stockage
-        let stringValue = value
-        if (typeof value === 'boolean') {
-          stringValue = value.toString()
-        } else if (typeof value === 'number') {
-          stringValue = value.toString()
-        }
-
-        updates.push({
-          key,
-          value: stringValue,
-          description: getSettingDescription(key),
-          updatedBy: currentUser.id
-        })
-      }
+      await prisma.systemSettings.upsert({
+        where: { key },
+        update: { value: String(value) },
+        create: { key, value: String(value) }
+      })
     }
 
-    if (updates.length === 0) {
-      return NextResponse.json({ error: 'Aucun paramètre valide à mettre à jour' }, { status: 400 })
-    }
-
-    // Effectuer les mises à jour en transaction
-    await prisma.$transaction(async (tx) => {
-      for (const update of updates) {
-        await tx.systemSettings.upsert({
-          where: { key: update.key },
-          update: {
-            value: update.value,
-            description: update.description,
-            updatedBy: update.updatedBy,
-            updatedAt: new Date()
-          },
-          create: update
-        })
-      }
-    })
-
-    // Logger l'activité
-    await logActivity({
-      userId: currentUser.id,
-      action: ACTIONS.UPDATE,
-      entity: ENTITIES.SYSTEM,
-      details: {
-        action: 'system_settings_update',
-        updatedSettings: Object.keys(settings),
-        changes: settings
-      },
-      ipAddress,
-      userAgent
-    })
-
-    // Invalider le cache de maintenance si nécessaire
-    if (settings.hasOwnProperty('maintenanceMode') || settings.hasOwnProperty('maintenanceMessage')) {
-      invalidateMaintenanceCache()
+    // Si le mode maintenance a été modifié, invalider le cache
+    if ('maintenanceMode' in settings) {
+      invalidateMiddlewareCache()
+      console.log('🔧 [Settings API] Mode maintenance modifié, cache invalidé')
     }
 
     console.log('✅ [Settings API] Paramètres mis à jour avec succès')
-
+    
     return NextResponse.json({ 
       success: true, 
-      message: 'Paramètres mis à jour avec succès',
-      updatedSettings: Object.keys(settings)
+      message: 'Paramètres mis à jour avec succès' 
     })
-
   } catch (error) {
-    console.error('❌ [Settings API] Erreur lors de la mise à jour:', error)
-    return NextResponse.json({ error: 'Erreur lors de la mise à jour des paramètres' }, { status: 500 })
+    console.error('❌ [Settings API] Erreur:', error)
+    return NextResponse.json({ 
+      error: 'Erreur lors de la mise à jour des paramètres' 
+    }, { status: 500 })
   } finally {
     await prisma.$disconnect()
   }
-}
-
-function getSettingDescription(key) {
-  const descriptions = {
-    maintenanceMode: 'Active le mode maintenance pour bloquer l\'accès au site',
-    registrationEnabled: 'Permet aux nouveaux utilisateurs de s\'inscrire',
-    emailVerificationRequired: 'Exige la vérification email lors de l\'inscription',
-    maxProjectsPerUser: 'Nombre maximum de projets par utilisateur',
-    maxTodosPerProject: 'Nombre maximum de tâches par projet',
-    sessionTimeout: 'Durée de validité des sessions en jours',
-    maintenanceMessage: 'Message affiché pendant la maintenance'
-  }
-  return descriptions[key] || null
-}
-
-export const GET = withAdminAuth(getHandler, ['ADMIN'])
-export const PUT = withAdminAuth(putHandler, ['ADMIN']) 
+} 

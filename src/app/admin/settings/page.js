@@ -182,6 +182,18 @@ function AdminSettings() {
             detail: { isEnabled: value, timestamp: Date.now() }
           }))
           
+          // Forcer une vérification immédiate du statut
+          setTimeout(async () => {
+            try {
+              await fetch(`/api/maintenance-status?refresh=${Date.now()}`, {
+                cache: 'no-cache'
+              })
+              console.log('🔧 [Admin] Cache de maintenance actualisé')
+            } catch (error) {
+              console.error('Erreur actualisation cache:', error)
+            }
+          }, 500) // Petit délai pour laisser la DB se mettre à jour
+          
           if (value) {
             toast.success('Mode maintenance activé. Les utilisateurs non-admin seront redirigés.')
           } else {

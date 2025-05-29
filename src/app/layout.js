@@ -26,8 +26,13 @@ export default function RootLayout({ children }) {
   const is404Page = typeof children === 'object' && 
                     children?.props?.className?.includes('not-found-page')
   
-  // Pages d'authentification et 404 où on ne veut pas la navbar
-  const isAuthPage = pathname?.startsWith('/auth/') || is404Page
+  // Vérifier si c'est la page de maintenance en regardant le contenu
+  const isMaintenancePage = typeof children === 'object' && 
+                           children?.props?.className?.includes('maintenance-page') ||
+                           pathname === '/maintenance'
+  
+  // Pages d'authentification, 404 et maintenance où on ne veut pas la navbar
+  const isAuthPage = pathname?.startsWith('/auth/') || is404Page || isMaintenancePage
   
   // Pages qui gèrent leur propre layout pleine largeur (sans container)
   const isFullWidthPage = pathname === '/' || pathname === '/api'
