@@ -141,7 +141,7 @@ export default function Navbar() {
                   {theme === 'system' ? '🖥️' : theme === 'light' ? '☀️' : '🌙'}
                 </button>
                 
-                <div>
+                <div className="relative">
                   <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className={`flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 ${
