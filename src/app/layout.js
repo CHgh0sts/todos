@@ -22,8 +22,12 @@ const inter = Inter({ subsets: ['latin'] })
 export default function RootLayout({ children }) {
   const pathname = usePathname()
   
-  // Pages d'authentification où on ne veut pas la navbar
-  const isAuthPage = pathname?.startsWith('/auth/')
+  // Vérifier si c'est la page 404 en regardant le contenu
+  const is404Page = typeof children === 'object' && 
+                    children?.props?.className?.includes('not-found-page')
+  
+  // Pages d'authentification et 404 où on ne veut pas la navbar
+  const isAuthPage = pathname?.startsWith('/auth/') || is404Page
   
   // Pages qui gèrent leur propre layout pleine largeur (sans container)
   const isFullWidthPage = pathname === '/' || pathname === '/api'
