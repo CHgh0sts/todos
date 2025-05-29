@@ -46,13 +46,25 @@ export default function ProjectsPage() {
   }
 
   useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        router.push('/auth/login')
-        return
-      }
-      fetchProjects()
+    console.log('🔍 [Projects Page] useEffect déclenché:', { 
+      authLoading, 
+      user: user ? `${user.name} (${user.id})` : 'null',
+      pathname: window.location.pathname
+    })
+    
+    if (authLoading) {
+      console.log('⏳ [Projects Page] Authentification en cours...')
+      return
     }
+    
+    if (!user) {
+      console.log('❌ [Projects Page] Utilisateur non connecté, redirection vers login')
+      router.push('/auth/login')
+      return
+    }
+    
+    console.log('✅ [Projects Page] Utilisateur connecté, récupération des projets')
+    fetchProjects()
   }, [user, authLoading, router])
 
   const getAuthHeaders = () => {
@@ -78,7 +90,12 @@ export default function ProjectsPage() {
       console.log('✅ [Projects Page] Token trouvé, longueur:', token.length)
       
       const response = await fetch(`/api/projects`, {
-        headers: getAuthHeaders()
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       })
       
       console.log('📡 [Projects Page] Réponse reçue:', {
@@ -100,10 +117,16 @@ export default function ProjectsPage() {
         })
         
         if (response.status === 401) {
-          toast.error('Session expirée, veuillez vous reconnecter')
-          router.push('/auth/login')
+          console.log('🔄 [Projects Page] Token expiré, tentative de rafraîchissement')
+          // Attendre un peu avant de rediriger pour éviter les redirections en boucle
+          setTimeout(() => {
+            toast.error('Session expirée, veuillez vous reconnecter')
+            router.push('/auth/login')
+          }, 1000)
         } else if (response.status === 500) {
           toast.error(`Erreur serveur: ${errorData.error || 'Erreur interne'}`)
+        } else if (response.status === 503) {
+          toast.error('Service temporairement indisponible, veuillez réessayer')
         } else {
           toast.error(`Erreur lors du chargement des projets: ${errorData.error || 'Erreur inconnue'}`)
         }
@@ -116,7 +139,7 @@ export default function ProjectsPage() {
       })
       
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        toast.error('Erreur de connexion au serveur')
+        toast.error('Erreur de connexion au serveur, vérifiez votre connexion')
       } else {
         toast.error('Erreur lors du chargement des projets')
       }

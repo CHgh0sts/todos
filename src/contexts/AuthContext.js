@@ -23,14 +23,21 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     // Marquer que nous sommes côté client
     setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    // Ne vérifier l'auth que quand on est côté client
+    if (!isClient) return
+
+    console.log('🔍 [AuthContext] Vérification de l\'authentification côté client')
     
     // Vérifier l'authentification avec un timeout
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.warn('Timeout de vérification d\'authentification')
+        console.warn('⚠️ [AuthContext] Timeout de vérification d\'authentification')
         setLoading(false)
       }
-    }, 5000) // Timeout de 5 secondes
+    }, 10000) // Timeout de 10 secondes (plus long)
 
     checkAuth().finally(() => {
       clearTimeout(timeoutId)
@@ -39,30 +46,50 @@ export function AuthProvider({ children }) {
     return () => {
       clearTimeout(timeoutId)
     }
-  }, [])
+  }, [isClient]) // Dépendance sur isClient
 
   const checkAuth = async () => {
     try {
-      // Ne pas vérifier l'auth si nous ne sommes pas côté client
-      if (!isClient && typeof window === 'undefined') {
+      console.log('🔍 [AuthContext] Début de checkAuth')
+      
+      // Vérifier que nous sommes côté client
+      if (typeof window === 'undefined') {
+        console.log('⚠️ [AuthContext] Pas côté client, arrêt de checkAuth')
         setLoading(false)
         return
       }
 
       const token = Cookies.get('token')
+      console.log('🔍 [AuthContext] Token trouvé:', token ? `Oui (${token.length} chars)` : 'Non')
+      
       if (!token) {
+        console.log('❌ [AuthContext] Pas de token, utilisateur non connecté')
         setLoading(false)
         return
       }
 
+      console.log('📡 [AuthContext] Vérification du token auprès du serveur')
+      
       const response = await fetch('/api/auth/me', {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
+      })
+
+      console.log('📡 [AuthContext] Réponse du serveur:', {
+        status: response.status,
+        ok: response.ok
       })
 
       if (response.ok) {
         const userData = await response.json()
+        console.log('✅ [AuthContext] Utilisateur authentifié:', {
+          id: userData.id,
+          name: userData.name,
+          email: userData.email
+        })
         setUser(userData)
         
         // Synchroniser le thème utilisateur avec le contexte
@@ -70,18 +97,24 @@ export function AuthProvider({ children }) {
           localStorage.setItem('theme', userData.theme)
         }
       } else {
+        console.error('❌ [AuthContext] Token invalide, suppression du cookie')
         Cookies.remove('token')
+        setUser(null)
       }
     } catch (error) {
-      console.error('Erreur lors de la vérification de l\'authentification:', error)
-      Cookies.remove('token')
+      console.error('❌ [AuthContext] Erreur lors de la vérification de l\'authentification:', error)
+      // Ne pas supprimer le token en cas d'erreur réseau
+      // Cookies.remove('token')
     } finally {
+      console.log('✅ [AuthContext] Fin de checkAuth')
       setLoading(false)
     }
   }
 
   const login = async (email, password) => {
     try {
+      console.log('🔍 [AuthContext] Tentative de connexion pour:', email)
+      
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -93,15 +126,23 @@ export function AuthProvider({ children }) {
       const data = await response.json()
 
       if (response.ok) {
-        Cookies.set('token', data.token, { expires: 7 })
+        console.log('✅ [AuthContext] Connexion réussie, définition du cookie')
+        // Cookie avec options sécurisées
+        Cookies.set('token', data.token, { 
+          expires: 7,
+          secure: window.location.protocol === 'https:',
+          sameSite: 'lax'
+        })
         setUser(data.user)
         toast.success('Connexion réussie !')
         return { success: true }
       } else {
+        console.error('❌ [AuthContext] Erreur de connexion:', data.error)
         toast.error(data.error || 'Erreur de connexion')
         return { success: false, error: data.error }
       }
     } catch (error) {
+      console.error('❌ [AuthContext] Erreur réseau lors de la connexion:', error)
       toast.error('Erreur de connexion')
       return { success: false, error: 'Erreur de connexion' }
     }
@@ -150,12 +191,14 @@ export function AuthProvider({ children }) {
   }
 
   const logout = () => {
+    console.log('🔍 [AuthContext] Déconnexion de l\'utilisateur')
     Cookies.remove('token')
     setUser(null)
     toast.success('Déconnexion réussie')
   }
 
   const refreshUser = async () => {
+    console.log('🔍 [AuthContext] Rafraîchissement des données utilisateur')
     await checkAuth()
   }
 
