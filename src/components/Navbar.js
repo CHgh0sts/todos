@@ -194,24 +194,21 @@ export default function Navbar() {
                         Mes amis
                       </Link>
 
-                      {/* Lien Administration pour ADMIN et MODERATOR */}
+                      {/* Lien Dashboard pour ADMIN et MODERATOR */}
                       {user && ['ADMIN', 'MODERATOR'].includes(user.role) && (
                         <Link
                           href="/admin"
-                          className={`flex items-center px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 ${
+                          className={`flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
                             isActive('/admin') 
-                              ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30' 
-                              : 'text-red-600 dark:text-red-400'
+                              ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' 
+                              : 'text-gray-700 dark:text-gray-300'
                           }`}
                           onClick={() => setIsMenuOpen(false)}
                         >
                           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                           </svg>
-                          Administration
-                          <span className="ml-auto bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 text-xs px-2 py-1 rounded-full">
-                            {user.role}
-                          </span>
+                          Dashboard
                         </Link>
                       )}
 
@@ -220,7 +217,7 @@ export default function Navbar() {
                           logout()
                           setIsMenuOpen(false)
                         }}
-                        className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                       >
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -373,7 +370,7 @@ export default function Navbar() {
                   </span>
                 </Link>
 
-                {/* Lien Administration pour ADMIN et MODERATOR */}
+                {/* Lien Dashboard pour ADMIN et MODERATOR */}
                 {user && ['ADMIN', 'MODERATOR'].includes(user.role) && (
                   <Link
                     href="/admin"
@@ -384,10 +381,7 @@ export default function Navbar() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     <span className="flex items-center">
-                      Administration
-                      <span className="ml-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 text-xs px-1.5 py-0.5 rounded-full">
-                        {user.role}
-                      </span>
+                      Dashboard
                     </span>
                   </Link>
                 )}
@@ -426,7 +420,7 @@ export default function Navbar() {
                   onClick={() => {
                     handleMobileLinkClick(() => logout())
                   }}
-                  className="flex items-center w-full text-left py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                  className="flex items-center w-full text-left py-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
