@@ -21,23 +21,43 @@ async function getHandler(request) {
     const category = url.searchParams.get('category')
     const priority = url.searchParams.get('priority')
 
-    let whereClause = {
-      OR: [
-        { userId: userId },
-        {
-          project: {
-            shares: {
-              some: {
-                userId: userId
+    let whereClause = {}
+
+    if (projectId) {
+      // Si un projectId est spécifié, récupérer toutes les todos du projet
+      // pour lesquelles l'utilisateur a accès (soit propriétaire, soit collaborateur)
+      whereClause = {
+        projectId: parseInt(projectId),
+        project: {
+          OR: [
+            { userId: userId }, // Propriétaire du projet
+            {
+              shares: {
+                some: {
+                  userId: userId // Collaborateur du projet
+                }
+              }
+            }
+          ]
+        }
+      }
+    } else {
+      // Si aucun projectId n'est spécifié, récupérer toutes les todos de l'utilisateur
+      // et celles des projets partagés avec lui
+      whereClause = {
+        OR: [
+          { userId: userId },
+          {
+            project: {
+              shares: {
+                some: {
+                  userId: userId
+                }
               }
             }
           }
-        }
-      ]
-    }
-
-    if (projectId) {
-      whereClause.projectId = parseInt(projectId)
+        ]
+      }
     }
 
     if (completed !== null && completed !== '') {
@@ -45,9 +65,15 @@ async function getHandler(request) {
     }
 
     if (search) {
-      whereClause.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+      // Ajouter la recherche aux conditions existantes
+      whereClause.AND = [
+        ...(whereClause.AND || []),
+        {
+          OR: [
+            { title: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } }
+          ]
+        }
       ]
     }
 
