@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useSocket } from '@/contexts/SocketContext'
 import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
+import TransferChatModal from '@/components/TransferChatModal'
 
 export default function AdminChatPage() {
   const [chatSessions, setChatSessions] = useState([])
@@ -14,6 +15,8 @@ export default function AdminChatPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('ACTIVE')
   const [isTyping, setIsTyping] = useState(false)
+  const [showTransferModal, setShowTransferModal] = useState(false)
+  const [transferNotification, setTransferNotification] = useState('')
   const messagesEndRef = useRef(null)
   const { user } = useAuth()
   const { socket, isConnected } = useSocket()
@@ -110,6 +113,16 @@ export default function AdminChatPage() {
       }
     }
   }, [socket, isConnected, selectedSession])
+
+  // Afficher la notification de transfert
+  useEffect(() => {
+    if (transferNotification) {
+      const timer = setTimeout(() => {
+        setTransferNotification('')
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [transferNotification])
 
   const getAuthHeaders = () => {
     const token = Cookies.get('token')
@@ -247,6 +260,11 @@ export default function AdminChatPage() {
     }
   }
 
+  const handleTransfer = (updatedSession, message) => {
+    setTransferNotification(message)
+    // La session sera mise à jour via Socket.IO
+  }
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'ACTIVE': return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
@@ -323,6 +341,18 @@ export default function AdminChatPage() {
     <div className="h-[90dvh] bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-hidden">
         
+        {/* Notification de transfert */}
+        {transferNotification && (
+          <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in">
+            <div className="flex items-center space-x-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{transferNotification}</span>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -513,6 +543,18 @@ export default function AdminChatPage() {
                           {selectedSession.status === 'ACTIVE' ? '🟢 Active' : selectedSession.status === 'WAITING' ? '🟡 Attente' : '🔴 Fermée'}
                         </span>
                         
+                        {selectedSession.status === 'ACTIVE' && selectedSession.assignedTo === user.id && (
+                          <button
+                            onClick={() => setShowTransferModal(true)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center space-x-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                            <span>Transférer</span>
+                          </button>
+                        )}
+                        
                         {selectedSession.status === 'ACTIVE' && (
                           <button
                             onClick={() => closeSession(selectedSession.id)}
@@ -647,7 +689,7 @@ export default function AdminChatPage() {
                       Sélectionnez une conversation
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400">
-                      Choisissez une session de chat pour commencer à répondre
+                      Choisissez une session de chat dans la liste pour commencer à répondre
                     </p>
                   </div>
                 </div>
@@ -657,6 +699,14 @@ export default function AdminChatPage() {
         </div>
       </div>
 
+      {/* Modal de transfert */}
+      <TransferChatModal
+        isOpen={showTransferModal}
+        onClose={() => setShowTransferModal(false)}
+        session={selectedSession}
+        onTransfer={handleTransfer}
+      />
+
       <style jsx>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
@@ -664,6 +714,13 @@ export default function AdminChatPage() {
         }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateX(100%); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
         }
       `}</style>
     </div>
