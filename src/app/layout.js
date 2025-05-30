@@ -14,6 +14,7 @@ import PWAManager from '@/components/PWAManager'
 import ConnectionStatus from '@/components/ConnectionStatus'
 import SessionManager from '@/components/SessionManager'
 import ActivityTracker from '@/components/ActivityTracker'
+import LiveChat from '@/components/LiveChat'
 import { usePathname } from 'next/navigation'
 import Head from 'next/head'
 
@@ -142,6 +143,7 @@ export default function RootLayout({ children }) {
                     <ConnectionStatus />
                     <SessionManager />
                     <ActivityTracker />
+                    <LiveChat />
                   </div>
                 ) : (
                   // Layout normal pour les autres pages
@@ -165,6 +167,7 @@ export default function RootLayout({ children }) {
                     <ConnectionStatus />
                     <SessionManager />
                     <ActivityTracker />
+                    <LiveChat />
                   </div>
                 )}
               </NotificationBadgeProvider>

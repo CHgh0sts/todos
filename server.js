@@ -109,6 +109,24 @@ app.prepare().then(() => {
       console.log(`📋 ${socket.userName} a quitté le projet ${projectId}`)
     })
 
+    // Rejoindre la salle admin pour le chat support
+    socket.on('join_admin_chat', () => {
+      socket.join('admin_chat')
+      console.log(`💬 ${socket.userName} a rejoint la salle admin chat`)
+    })
+
+    // Rejoindre une session de chat spécifique
+    socket.on('join_chat_session', (sessionId) => {
+      socket.join(`chat_session_${sessionId}`)
+      console.log(`💬 ${socket.userName} a rejoint la session de chat ${sessionId}`)
+    })
+
+    // Quitter une session de chat spécifique
+    socket.on('leave_chat_session', (sessionId) => {
+      socket.leave(`chat_session_${sessionId}`)
+      console.log(`💬 ${socket.userName} a quitté la session de chat ${sessionId}`)
+    })
+
     // Déconnexion
     socket.on('disconnect', (reason) => {
       console.log(`❌ Utilisateur déconnecté: ${socket.userName} (Raison: ${reason})`)

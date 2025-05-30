@@ -545,7 +545,7 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
                     onClick={() => setShowLinkModal(true)}
                     className="inline-flex items-center px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
                   >
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                     Nouveau lien
@@ -828,7 +828,7 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
           
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-5">
             <div className="flex items-start">
-              <svg className="w-6 h-6 text-blue-500 mt-0.5 mr-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-blue-500 mt-0.5 mr-4 flex-shrink-0 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>

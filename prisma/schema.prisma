@@ -49,6 +49,8 @@ model User {
   targetActivityLogs     ActivityLog[]   @relation("TargetActivityLogs")
   // Relations pour le nouveau système d'activité utilisateur
   userActivities         UserActivity[]
+  // Relations pour le chat en direct
+  chatSessions           ChatSession[]
 }
 
 model Project {
@@ -283,8 +285,59 @@ model UserActivity {
   @@map("user_activities")
 }
 
+// Système de chat en direct
+model ChatSession {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  status       ChatStatus @default(ACTIVE)
+  assignedTo   Int? // ID du modérateur assigné
+  startedAt    DateTime   @default(now())
+  endedAt      DateTime?
+  lastActivity DateTime   @default(now())
+  rating       Int? // Note de 1 à 5 donnée par l'utilisateur
+  feedback     String? // Commentaire de l'utilisateur
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@index([userId, status])
+  @@index([assignedTo, status])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id        Int           @id @default(autoincrement())
+  sessionId Int
+  content   String
+  sender    MessageSender
+  sentAt    DateTime      @default(now())
+  readAt    DateTime?
+
+  // Relations
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, sentAt])
+  @@map("chat_messages")
+}
+
 enum Role {
   USER
   MODERATOR
   ADMIN
+}
+
+enum ChatStatus {
+  ACTIVE
+  WAITING
+  CLOSED
+  ARCHIVED
+}
+
+enum MessageSender {
+  USER
+  SUPPORT
+  SYSTEM
 }

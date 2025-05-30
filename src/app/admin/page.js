@@ -177,7 +177,7 @@ export default function AdminDashboard() {
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
                   <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
                 <div className="ml-4">
@@ -236,60 +236,99 @@ export default function AdminDashboard() {
           </div>
 
           {/* Navigation rapide */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <Link href="/admin/users" className="group">
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-200 group-hover:scale-105">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Gestion Utilisateurs</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Gérer les comptes et rôles</p>
+              <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl shadow-lg p-6 border border-blue-200 dark:border-blue-700/50 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-1 cursor-pointer overflow-hidden h-32">
+                {/* Effet de brillance au survol */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                
+                <div className="relative flex items-center justify-between h-full">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100 group-hover:text-blue-700 dark:group-hover:text-blue-200 transition-colors">Gestion Utilisateurs</h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mt-1 group-hover:text-blue-600 dark:group-hover:text-blue-200 transition-colors">Gérer les comptes et rôles</p>
                   </div>
-                  <svg className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                  </svg>
+                  <div className="p-3 bg-blue-500 dark:bg-blue-600 rounded-full group-hover:bg-blue-600 dark:group-hover:bg-blue-500 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 ml-4">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
                 </div>
               </div>
             </Link>
 
             <Link href="/admin/projects" className="group">
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-200 group-hover:scale-105">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Gestion Projets</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Superviser tous les projets</p>
+              <div className="relative bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl shadow-lg p-6 border border-green-200 dark:border-green-700/50 hover:shadow-2xl hover:shadow-green-500/20 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-1 cursor-pointer overflow-hidden h-32">
+                {/* Effet de brillance au survol */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                
+                <div className="relative flex items-center justify-between h-full">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-green-900 dark:text-green-100 group-hover:text-green-700 dark:group-hover:text-green-200 transition-colors">Gestion Projets</h3>
+                    <p className="text-sm text-green-700 dark:text-green-300 mt-1 group-hover:text-green-600 dark:group-hover:text-green-200 transition-colors">Superviser tous les projets</p>
                   </div>
-                  <svg className="w-8 h-8 text-green-600 dark:text-green-400 group-hover:text-green-700 dark:group-hover:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
+                  <div className="p-3 bg-green-500 dark:bg-green-600 rounded-full group-hover:bg-green-600 dark:group-hover:bg-green-500 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 ml-4">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/admin/chat" className="group">
+              <div className="relative bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/20 rounded-xl shadow-lg p-6 border border-cyan-200 dark:border-cyan-700/50 hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-1 cursor-pointer overflow-hidden h-32">
+                {/* Effet de brillance au survol */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                
+                <div className="relative flex items-center justify-between h-full">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-cyan-900 dark:text-cyan-100 group-hover:text-cyan-700 dark:group-hover:text-cyan-200 transition-colors">Chat Support</h3>
+                    <p className="text-sm text-cyan-700 dark:text-cyan-300 mt-1 group-hover:text-cyan-600 dark:group-hover:text-cyan-200 transition-colors">Gérer les conversations</p>
+                  </div>
+                  <div className="p-3 bg-cyan-500 dark:bg-cyan-600 rounded-full group-hover:bg-cyan-600 dark:group-hover:bg-cyan-500 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 ml-4">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
                 </div>
               </div>
             </Link>
 
             <Link href="/admin/activity" className="group">
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-200 group-hover:scale-105">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Historique</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Logs d'activité complets</p>
+              <div className="relative bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl shadow-lg p-6 border border-purple-200 dark:border-purple-700/50 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-1 cursor-pointer overflow-hidden h-32">
+                {/* Effet de brillance au survol */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                
+                <div className="relative flex items-center justify-between h-full">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-purple-900 dark:text-purple-100 group-hover:text-purple-700 dark:group-hover:text-purple-200 transition-colors">Historique</h3>
+                    <p className="text-sm text-purple-700 dark:text-purple-300 mt-1 group-hover:text-purple-600 dark:group-hover:text-purple-200 transition-colors">Logs d'activité complets</p>
                   </div>
-                  <svg className="w-8 h-8 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
+                  <div className="p-3 bg-purple-500 dark:bg-purple-600 rounded-full group-hover:bg-purple-600 dark:group-hover:bg-purple-500 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 ml-4">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
                 </div>
               </div>
             </Link>
 
             <Link href="/admin/settings" className="group">
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-200 group-hover:scale-105">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Paramètres</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Configuration système</p>
+              <div className="relative bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-xl shadow-lg p-6 border border-orange-200 dark:border-orange-700/50 hover:shadow-2xl hover:shadow-orange-500/20 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-1 cursor-pointer overflow-hidden h-32">
+                {/* Effet de brillance au survol */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                
+                <div className="relative flex items-center justify-between h-full">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-orange-900 dark:text-orange-100 group-hover:text-orange-700 dark:group-hover:text-orange-200 transition-colors">Paramètres</h3>
+                    <p className="text-sm text-orange-700 dark:text-orange-300 mt-1 group-hover:text-orange-600 dark:group-hover:text-orange-200 transition-colors">Configuration système</p>
                   </div>
-                  <svg className="w-8 h-8 text-orange-600 dark:text-orange-400 group-hover:text-orange-700 dark:group-hover:text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
+                  <div className="p-3 bg-orange-500 dark:bg-orange-600 rounded-full group-hover:bg-orange-600 dark:group-hover:bg-orange-500 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 ml-4">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
                 </div>
               </div>
             </Link>
