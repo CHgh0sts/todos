@@ -171,6 +171,33 @@ async function postHandler(request) {
       return NextResponse.json({ error: 'Erreur de connexion à la base de données' }, { status: 500 })
     }
 
+    // Vérifier la limite de projets par utilisateur
+    console.log('🔍 [Projects API] Vérification de la limite de projets par utilisateur')
+    
+    // Récupérer la limite depuis les paramètres système
+    const maxProjectsSetting = await prisma.systemSettings.findUnique({
+      where: { key: 'maxProjectsPerUser' }
+    })
+    
+    const maxProjects = maxProjectsSetting ? parseInt(maxProjectsSetting.value) : 10
+    console.log('📊 [Projects API] Limite de projets par utilisateur:', maxProjects)
+    
+    // Compter les projets existants de l'utilisateur (seulement ceux qu'il possède)
+    const currentProjectsCount = await prisma.project.count({
+      where: { userId: userId }
+    })
+    
+    console.log('📊 [Projects API] Projets actuels de l\'utilisateur:', currentProjectsCount)
+    
+    if (currentProjectsCount >= maxProjects) {
+      console.error('❌ [Projects API] Limite de projets atteinte')
+      return NextResponse.json({ 
+        error: `Limite atteinte. Vous ne pouvez créer que ${maxProjects} projets maximum.`,
+        currentCount: currentProjectsCount,
+        maxAllowed: maxProjects
+      }, { status: 403 })
+    }
+
     const project = await prisma.project.create({
       data: {
         name: name.trim(),

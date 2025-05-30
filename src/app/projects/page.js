@@ -17,6 +17,7 @@ function ProjectsPage() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [maxProjectsPerUser, setMaxProjectsPerUser] = useState(10) // Valeur par défaut
   
   // États pour la collaboration
   const [showCollaborationModal, setShowCollaborationModal] = useState(false)
@@ -66,6 +67,7 @@ function ProjectsPage() {
     
     console.log('✅ [Projects Page] Utilisateur connecté, récupération des projets')
     fetchProjects()
+    fetchSystemSettings()
   }, [user, authLoading, router])
 
   const getAuthHeaders = () => {
@@ -73,6 +75,34 @@ function ProjectsPage() {
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
+    }
+  }
+
+  const fetchSystemSettings = async () => {
+    try {
+      console.log('🔍 [Projects Page] Récupération des paramètres système')
+      
+      const token = Cookies.get('token')
+      if (!token) return
+      
+      const response = await fetch('/api/admin/settings', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.settings) {
+          setMaxProjectsPerUser(data.settings.maxProjectsPerUser || 10)
+          console.log('✅ [Projects Page] Limite de projets récupérée:', data.settings.maxProjectsPerUser)
+        }
+      } else {
+        console.log('⚠️ [Projects Page] Impossible de récupérer les paramètres système')
+      }
+    } catch (error) {
+      console.error('❌ [Projects Page] Erreur lors de la récupération des paramètres:', error)
     }
   }
 
@@ -99,7 +129,7 @@ function ProjectsPage() {
         }
       })
       
-      console.log('📡 [Projects Page] Réponse reçue:', {
+      console.log('✅ [Projects Page] Réponse reçue:', {
         status: response.status,
         statusText: response.statusText,
         ok: response.ok
@@ -175,7 +205,13 @@ function ProjectsPage() {
         setShowCreateForm(false)
         toast.success('Projet créé avec succès !')
       } else {
-        toast.error('Erreur lors de la création du projet')
+        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        
+        if (response.status === 403 && errorData.error?.includes('Limite atteinte')) {
+          toast.error(errorData.error)
+        } else {
+          toast.error('Erreur lors de la création du projet')
+        }
       }
     } catch (error) {
       console.error('Erreur lors de la création du projet:', error)
@@ -274,12 +310,27 @@ function ProjectsPage() {
           
           <button
             onClick={() => setShowCreateForm(true)}
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+            disabled={projects.filter(project => project.isOwner).length >= maxProjectsPerUser}
+            className={`inline-flex items-center px-6 py-3 rounded-lg transition-all duration-200 font-medium shadow-md hover:shadow-lg ${
+              projects.filter(project => project.isOwner).length >= maxProjectsPerUser
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
+            }`}
+            title={
+              projects.filter(project => project.isOwner).length >= maxProjectsPerUser
+                ? `Limite atteinte (${maxProjectsPerUser} projets maximum)`
+                : 'Créer un nouveau projet'
+            }
           >
             <svg className="w-5 h-5 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            <span className="hidden md:inline">Nouveau projet</span>
+            <span className="hidden md:inline">
+              {projects.filter(project => project.isOwner).length >= maxProjectsPerUser
+                ? 'Limite atteinte'
+                : 'Nouveau projet'
+              }
+            </span>
           </button>
         </div>
       </div>
@@ -289,7 +340,7 @@ function ProjectsPage() {
         <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
           <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">📊 Aperçu</h3>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{projects.length}</div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Projets totaux</div>
@@ -311,6 +362,18 @@ function ProjectsPage() {
                 {projects.reduce((total, project) => total + (project._count?.todos || 0), 0)}
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Todos totaux</div>
+            </div>
+            <div className="text-center">
+              <div className={`text-2xl font-bold ${
+                (maxProjectsPerUser - projects.filter(project => project.isOwner).length) > 0 
+                  ? 'text-emerald-600 dark:text-emerald-400' 
+                  : 'text-red-600 dark:text-red-400'
+              }`}>
+                {maxProjectsPerUser - projects.filter(project => project.isOwner).length}
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Restants ({maxProjectsPerUser} max)
+              </div>
             </div>
           </div>
         </div>

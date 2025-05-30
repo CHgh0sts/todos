@@ -439,24 +439,62 @@ function AdminSettings() {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Projets max par utilisateur
                       </label>
-                      <input
-                        type="number"
-                        value={settings.maxProjectsPerUser}
-                        onChange={(e) => updateSetting('maxProjectsPerUser', parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      />
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={settings.maxProjectsPerUser}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 1
+                            setSettings(prev => ({ ...prev, maxProjectsPerUser: value }))
+                          }}
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        />
+                        <button
+                          onClick={() => updateSetting('maxProjectsPerUser', settings.maxProjectsPerUser)}
+                          className="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-1"
+                          title="Sauvegarder"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Limite le nombre de projets qu'un utilisateur peut créer (1-100)
+                      </p>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Tâches max par projet
                       </label>
-                      <input
-                        type="number"
-                        value={settings.maxTodosPerProject}
-                        onChange={(e) => updateSetting('maxTodosPerProject', parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      />
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="number"
+                          min="1"
+                          max="1000"
+                          value={settings.maxTodosPerProject}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 1
+                            setSettings(prev => ({ ...prev, maxTodosPerProject: value }))
+                          }}
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        />
+                        <button
+                          onClick={() => updateSetting('maxTodosPerProject', settings.maxTodosPerProject)}
+                          className="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-1"
+                          title="Sauvegarder"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Limite le nombre de tâches par projet (1-1000)
+                      </p>
                     </div>
                   </div>
 
