@@ -46,8 +46,8 @@ export async function POST(request) {
       where: { key: 'emailVerificationRequired' }
     })
 
-    // La vérification est requise si le paramètre est explicitement défini à 'true' (valeur par défaut)
-    const emailVerificationRequired = emailVerificationSetting?.value === 'true'
+    // La vérification est requise par défaut (true) sauf si explicitement désactivée (false)
+    const emailVerificationRequired = emailVerificationSetting?.value !== 'false'
 
     console.log('🔍 [Register API] Vérification email requise:', emailVerificationRequired, 'Valeur en base:', emailVerificationSetting?.value)
 
