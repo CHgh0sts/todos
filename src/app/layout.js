@@ -53,9 +53,9 @@ export default function RootLayout({ children }) {
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#3B82F6" />
+        <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="theme-color" content="#3B82F6" />
+        <meta name="theme-color" content="#000000" />
         
         {/* Viewport optimisé pour PWA */}
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, user-scalable=no, viewport-fit=cover" />
@@ -71,7 +71,7 @@ export default function RootLayout({ children }) {
         <link rel="icon" type="image/png" sizes="96x96" href="/icons/icon-96x96.png" />
         <link rel="icon" type="image/png" sizes="72x72" href="/icons/icon-72x72.png" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#3B82F6" />
+        <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#000000" />
         <link rel="shortcut icon" href="/icons/icon-128x128.png" />
 
         {/* Écran de démarrage iOS */}
@@ -94,7 +94,7 @@ export default function RootLayout({ children }) {
         <meta name="twitter:image" content="https://todo.chghosts.fr/icons/icon-512x512.png" />
         <meta name="twitter:creator" content="@collabwave" />
 
-        <title>CollabWave - Gestion de Projets Collaboratifs</title>
+        <title>CollabWave</title>
       </head>
       <body className={inter.className}>
         <ThemeProvider>

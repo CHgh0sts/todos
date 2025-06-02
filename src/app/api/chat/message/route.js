@@ -7,13 +7,22 @@ const prisma = new PrismaClient()
 export async function POST(request) {
   try {
     const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Token manquant' }, { status: 401 })
-    }
+    let userId = null
+    let isGuest = false
 
-    const token = authHeader.substring(7)
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    const userId = decoded.userId
+    // Vérifier si l'utilisateur est connecté
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7)
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        userId = decoded.userId
+      } catch (error) {
+        console.log('Token invalide, traitement en tant qu\'invité')
+        isGuest = true
+      }
+    } else {
+      isGuest = true
+    }
 
     const { sessionId, content } = await request.json()
 
@@ -21,12 +30,13 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Données manquantes' }, { status: 400 })
     }
 
-    // Vérifier que la session appartient à l'utilisateur
+    // Vérifier que la session existe et appartient à l'utilisateur (ou est une session invité)
+    const sessionWhere = isGuest 
+      ? { id: sessionId, isGuest: true }
+      : { id: sessionId, userId: userId }
+
     const session = await prisma.chatSession.findFirst({
-      where: {
-        id: sessionId,
-        userId: userId
-      }
+      where: sessionWhere
     })
 
     if (!session) {
@@ -48,15 +58,24 @@ export async function POST(request) {
       where: { id: sessionId },
       data: { lastActivity: new Date() },
       include: {
-        user: {
+        user: session.userId ? {
           select: {
             id: true,
             name: true,
             email: true
           }
-        }
+        } : undefined
       }
     })
+
+    // Enrichir la session avec les informations d'invité pour l'affichage
+    if (session.isGuest) {
+      updatedSession.user = {
+        id: null,
+        name: `${session.guestFirstName} ${session.guestLastName}`,
+        email: session.userEmail
+      }
+    }
 
     // Émettre les événements Socket.IO
     if (global.io) {

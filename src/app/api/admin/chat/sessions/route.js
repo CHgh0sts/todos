@@ -49,7 +49,22 @@ export async function GET(request) {
       }
     })
 
-    return NextResponse.json(sessions)
+    // Enrichir les sessions d'invités avec leurs informations
+    const enrichedSessions = sessions.map(session => {
+      if (session.isGuest && !session.user) {
+        return {
+          ...session,
+          user: {
+            id: null,
+            name: `${session.guestFirstName} ${session.guestLastName}`,
+            email: session.userEmail
+          }
+        }
+      }
+      return session
+    })
+
+    return NextResponse.json(enrichedSessions)
   } catch (error) {
     console.error('Erreur lors de la récupération des sessions:', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

@@ -288,23 +288,39 @@ model UserActivity {
 // Système de chat en direct
 model ChatSession {
   id           Int        @id @default(autoincrement())
-  userId       Int
-  status       ChatStatus @default(ACTIVE)
+  userId       Int? // Optionnel pour les utilisateurs non connectés
+  status       ChatStatus @default(WAITING)
   assignedTo   Int? // ID du modérateur assigné
   startedAt    DateTime   @default(now())
   endedAt      DateTime?
   lastActivity DateTime   @default(now())
   rating       Int? // Note de 1 à 5 donnée par l'utilisateur
   feedback     String? // Commentaire de l'utilisateur
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+
+  // Informations de contexte collectées avant le chat
+  subject     String? // Sujet de la demande
+  category    String? // Catégorie (Technique, Facturation, Général, etc.)
+  priority    String? // Priorité (Faible, Normale, Élevée, Urgente)
+  description String? // Description détaillée du problème
+  userEmail   String? // Email de contact (peut être différent du compte)
+  userPhone   String? // Téléphone optionnel
+
+  // Informations pour les utilisateurs non connectés
+  isGuest        Boolean @default(false) // Indique si c'est un utilisateur non connecté
+  guestFirstName String? // Prénom du visiteur
+  guestLastName  String? // Nom du visiteur
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages ChatMessage[]
 
   @@index([userId, status])
   @@index([assignedTo, status])
+  @@index([category, priority])
+  @@index([isGuest, status])
   @@map("chat_sessions")
 }
 

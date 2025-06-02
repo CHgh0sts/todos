@@ -7,52 +7,115 @@ const prisma = new PrismaClient()
 export async function POST(request) {
   try {
     const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Token manquant' }, { status: 401 })
+    let userId = null
+    let isGuest = false
+
+    // Vérifier si l'utilisateur est connecté
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7)
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        userId = decoded.userId
+      } catch (error) {
+        console.log('Token invalide, traitement en tant qu\'invité')
+        isGuest = true
+      }
+    } else {
+      isGuest = true
     }
 
-    const token = authHeader.substring(7)
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    const userId = decoded.userId
+    // Récupérer les données de contexte du formulaire
+    const body = await request.json()
+    const { 
+      subject, 
+      category, 
+      priority, 
+      description, 
+      userEmail, 
+      userPhone,
+      firstName,
+      lastName,
+      isGuest: bodyIsGuest
+    } = body
 
-    // Vérifier si l'utilisateur a déjà une session active
-    let existingSession = await prisma.chatSession.findFirst({
-      where: {
-        userId: userId,
-        status: 'ACTIVE'
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
+    // Si c'est un invité, vérifier les champs obligatoires
+    if (isGuest || bodyIsGuest) {
+      if (!firstName || !lastName || !userEmail || !subject || !category || !description) {
+        return NextResponse.json({ 
+          error: 'Informations manquantes pour les utilisateurs non connectés' 
+        }, { status: 400 })
+      }
+      isGuest = true
+      userId = null
+    }
+
+    // Vérifier si l'utilisateur connecté a déjà une session active ou en attente
+    if (userId) {
+      let existingSession = await prisma.chatSession.findFirst({
+        where: {
+          userId: userId,
+          status: {
+            in: ['ACTIVE', 'WAITING']
+          }
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
           }
         }
-      }
-    })
+      })
 
-    if (existingSession) {
-      return NextResponse.json(existingSession)
+      if (existingSession) {
+        return NextResponse.json(existingSession)
+      }
     }
 
-    // Créer une nouvelle session
+    // Créer une nouvelle session avec les données de contexte
+    const sessionData = {
+      status: 'WAITING', // Commence en attente d'un agent
+      startedAt: new Date(),
+      subject: subject || null,
+      category: category || null,
+      priority: priority || 'Normale',
+      description: description || null,
+      userEmail: userEmail || null,
+      userPhone: userPhone || null,
+      isGuest: isGuest
+    }
+
+    // Ajouter les données spécifiques selon le type d'utilisateur
+    if (isGuest) {
+      sessionData.guestFirstName = firstName
+      sessionData.guestLastName = lastName
+    } else {
+      sessionData.userId = userId
+    }
+
     const session = await prisma.chatSession.create({
-      data: {
-        userId: userId,
-        status: 'ACTIVE',
-        startedAt: new Date()
-      },
+      data: sessionData,
       include: {
-        user: {
+        user: userId ? {
           select: {
             id: true,
             name: true,
             email: true
           }
-        }
+        } : undefined
       }
     })
+
+    // Enrichir la session avec les informations d'invité pour l'affichage
+    if (isGuest) {
+      session.user = {
+        id: null,
+        name: `${firstName} ${lastName}`,
+        email: userEmail
+      }
+    }
 
     // Émettre l'événement Socket.IO pour notifier les admins
     if (global.io) {

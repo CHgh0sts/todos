@@ -460,30 +460,86 @@ export default function AdminChatPage() {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-3">
                             <div className="relative">
-                              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-md ${
+                                session.isGuest 
+                                  ? 'bg-gradient-to-br from-orange-500 to-red-600' 
+                                  : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                              }`}>
                                 {session.user?.name?.charAt(0) || 'U'}
                               </div>
                               <div className="absolute -bottom-1 -right-1">
                                 {getStatusIcon(session.status)}
                               </div>
+                              {/* Indicateur invité */}
+                              {session.isGuest && (
+                                <div className="absolute -top-1 -left-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                                  <span className="text-xs text-white font-bold">👤</span>
+                                </div>
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 dark:text-white truncate text-sm">
-                                {session.user?.name || 'Utilisateur'}
-                              </p>
+                              <div className="flex items-center space-x-2">
+                                <p className="font-medium text-gray-900 dark:text-white truncate text-sm">
+                                  {session.user?.name || 'Utilisateur'}
+                                </p>
+                                {session.isGuest && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                                    Invité
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-xs text-gray-500 dark:text-gray-400">
                                 {getTimeAgo(session.startedAt)}
+                                {session.isGuest && session.userEmail && (
+                                  <span className="ml-2">• {session.userEmail}</span>
+                                )}
                               </p>
                             </div>
                           </div>
                         </div>
+
+                        {/* Informations de contexte */}
+                        {session.subject && (
+                          <div className="mb-2">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                              📋 {session.subject}
+                            </p>
+                          </div>
+                        )}
+
+                        {session.category && (
+                          <div className="mb-2">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              session.category === 'Urgente' || session.category === 'Bug' 
+                                ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                : session.category === 'Technique'
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                : session.category === 'Facturation'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                            }`}>
+                              {session.category}
+                            </span>
+                            {session.priority && session.priority !== 'Normale' && (
+                              <span className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                session.priority === 'Urgente' 
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                  : session.priority === 'Élevée'
+                                  ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                              }`}>
+                                🔥 {session.priority}
+                              </span>
+                            )}
+                          </div>
+                        )}
                         
                         <div className="flex items-center justify-between">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(session.status)}`}>
                             {session.status === 'ACTIVE' ? 'Active' : session.status === 'WAITING' ? 'Attente' : 'Fermée'}
                           </span>
                           
-                          {!session.assignedTo && session.status === 'ACTIVE' && (
+                          {!session.assignedTo && session.status === 'WAITING' && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
@@ -518,22 +574,44 @@ export default function AdminChatPage() {
                 <>
                   {/* Header du chat */}
                   <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-4">
                         <div className="relative">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
+                            selectedSession.isGuest 
+                              ? 'bg-gradient-to-br from-orange-500 to-red-600' 
+                              : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                          }`}>
                             {selectedSession.user?.name?.charAt(0) || 'U'}
                           </div>
                           <div className="absolute -bottom-1 -right-1">
                             {getStatusIcon(selectedSession.status)}
                           </div>
+                          {/* Indicateur invité */}
+                          {selectedSession.isGuest && (
+                            <div className="absolute -top-1 -left-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                              <span className="text-xs text-white font-bold">👤</span>
+                            </div>
+                          )}
                         </div>
                         <div>
-                          <h3 className="font-bold text-gray-900 dark:text-white">
-                            {selectedSession.user?.name || 'Utilisateur'}
-                          </h3>
+                          <div className="flex items-center space-x-2">
+                            <h3 className="font-bold text-gray-900 dark:text-white">
+                              {selectedSession.user?.name || 'Utilisateur'}
+                            </h3>
+                            {selectedSession.isGuest && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                                👤 Utilisateur invité
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
                             {selectedSession.user?.email}
+                            {selectedSession.isGuest && (
+                              <span className="ml-2 text-orange-600 dark:text-orange-400">
+                                • Non connecté
+                              </span>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -565,6 +643,102 @@ export default function AdminChatPage() {
                         )}
                       </div>
                     </div>
+
+                    {/* Informations de contexte détaillées */}
+                    {(selectedSession.subject || selectedSession.category || selectedSession.description) && (
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                        <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Contexte de la demande
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {selectedSession.subject && (
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                Sujet
+                              </label>
+                              <p className="text-sm text-gray-900 dark:text-white font-medium">
+                                {selectedSession.subject}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {selectedSession.category && (
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                Catégorie
+                              </label>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                selectedSession.category === 'Urgente' || selectedSession.category === 'Bug' 
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                  : selectedSession.category === 'Technique'
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                  : selectedSession.category === 'Facturation'
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                              }`}>
+                                {selectedSession.category}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {selectedSession.priority && (
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                Priorité
+                              </label>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                selectedSession.priority === 'Urgente' 
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                  : selectedSession.priority === 'Élevée'
+                                  ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                                  : selectedSession.priority === 'Normale'
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                              }`}>
+                                {selectedSession.priority === 'Urgente' ? '🔥' : selectedSession.priority === 'Élevée' ? '⚡' : '📋'} {selectedSession.priority}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {(selectedSession.userEmail || selectedSession.userPhone) && (
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                Contact
+                              </label>
+                              <div className="space-y-1">
+                                {selectedSession.userEmail && (
+                                  <p className="text-sm text-gray-900 dark:text-white">
+                                    📧 {selectedSession.userEmail}
+                                  </p>
+                                )}
+                                {selectedSession.userPhone && (
+                                  <p className="text-sm text-gray-900 dark:text-white">
+                                    📞 {selectedSession.userPhone}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {selectedSession.description && (
+                          <div className="mt-4">
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                              Description détaillée
+                            </label>
+                            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                              <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+                                {selectedSession.description}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Messages */}
