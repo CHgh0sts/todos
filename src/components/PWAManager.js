@@ -168,13 +168,30 @@ export default function PWAManager() {
   }
 
   const handleUpdate = () => {
+    console.log('🔄 Tentative de mise à jour PWA...')
+    
     if (swRegistration && swRegistration.waiting) {
+      console.log('✅ Service Worker en attente trouvé, activation...')
       // Dire au service worker d'activer la nouvelle version
       swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' })
       
-      // Recharger la page pour utiliser la nouvelle version
+      // Attendre un peu puis recharger
+      setTimeout(() => {
+        console.log('🔄 Rechargement de la page...')
+        window.location.reload()
+      }, 500)
+    } else if (swRegistration) {
+      console.log('⚠️ Aucun service worker en attente, rechargement direct...')
+      // Pas de SW en attente, recharger directement
+      window.location.reload()
+    } else {
+      console.log('❌ Aucun service worker enregistré')
+      // Fallback : recharger quand même
       window.location.reload()
     }
+    
+    // Masquer la notification immédiatement
+    setUpdateAvailable(false)
   }
 
   const dismissInstall = () => {
