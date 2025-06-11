@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
 import { withApiLogging, getAuthenticatedUser } from '@/lib/apiMiddleware'
 import { logAdd, extractRequestInfo, generateTextLog } from '@/lib/userActivityLogger'
+import { getOptimizedUserProjects, getOptimizedPrisma, invalidateUserCache } from '@/lib/dbOptimization'
 
 const prisma = new PrismaClient()
 
@@ -20,62 +21,10 @@ async function getHandler(request) {
     const userId = user.id
     console.log('✅ [Projects API] Utilisateur authentifié:', { userId, userName: user.name })
 
-    // Vérifier la connexion à la base de données
-    try {
-      await prisma.$connect()
-      console.log('✅ [Projects API] Connexion à la base de données établie')
-    } catch (dbError) {
-      console.error('❌ [Projects API] Erreur de connexion à la base de données:', dbError)
-      return NextResponse.json({ error: 'Erreur de connexion à la base de données' }, { status: 500 })
-    }
-
-    // Récupérer les projets de l'utilisateur
-    console.log('🔍 [Projects API] Récupération des projets pour l\'utilisateur:', userId)
+    // Utiliser la requête optimisée avec cache
+    console.log('🔍 [Projects API] Récupération des projets avec cache optimisé')
     
-    const projects = await prisma.project.findMany({
-      where: {
-        OR: [
-          { userId: userId },
-          {
-            shares: {
-              some: {
-                userId: userId
-              }
-            }
-          }
-        ]
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            profileImage: true
-          }
-        },
-        shares: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                profileImage: true
-              }
-            }
-          }
-        },
-        _count: {
-          select: {
-            todos: true
-          }
-        }
-      },
-      orderBy: {
-        updatedAt: 'desc'
-      }
-    })
+    const projects = await getOptimizedUserProjects(userId)
 
     console.log('✅ [Projects API] Projets récupérés:', { count: projects.length })
 
@@ -129,13 +78,6 @@ async function getHandler(request) {
       error: 'Erreur serveur', 
       details: process.env.NODE_ENV === 'development' ? error.message : undefined 
     }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-      console.log('✅ [Projects API] Déconnexion de la base de données')
-    } catch (disconnectError) {
-      console.error('⚠️ [Projects API] Erreur lors de la déconnexion:', disconnectError)
-    }
   }
 }
 
@@ -162,20 +104,14 @@ async function postHandler(request) {
       return NextResponse.json({ error: 'Le nom du projet est requis' }, { status: 400 })
     }
 
-    // Vérifier la connexion à la base de données
-    try {
-      await prisma.$connect()
-      console.log('✅ [Projects API] Connexion à la base de données établie pour création')
-    } catch (dbError) {
-      console.error('❌ [Projects API] Erreur de connexion à la base de données:', dbError)
-      return NextResponse.json({ error: 'Erreur de connexion à la base de données' }, { status: 500 })
-    }
+    // Utiliser l'instance Prisma optimisée
+    const optimizedPrisma = getOptimizedPrisma()
 
     // Vérifier la limite de projets par utilisateur
     console.log('🔍 [Projects API] Vérification de la limite de projets par utilisateur')
     
     // Récupérer la limite depuis les paramètres système
-    const maxProjectsSetting = await prisma.systemSettings.findUnique({
+    const maxProjectsSetting = await optimizedPrisma.systemSettings.findUnique({
       where: { key: 'maxProjectsPerUser' }
     })
     
@@ -183,7 +119,7 @@ async function postHandler(request) {
     console.log('📊 [Projects API] Limite de projets par utilisateur:', maxProjects)
     
     // Compter les projets existants de l'utilisateur (seulement ceux qu'il possède)
-    const currentProjectsCount = await prisma.project.count({
+    const currentProjectsCount = await optimizedPrisma.project.count({
       where: { userId: userId }
     })
     
@@ -198,7 +134,7 @@ async function postHandler(request) {
       }, { status: 403 })
     }
 
-    const project = await prisma.project.create({
+    const project = await optimizedPrisma.project.create({
       data: {
         name: name.trim(),
         description: description?.trim() || null,
@@ -222,6 +158,10 @@ async function postHandler(request) {
         }
       }
     })
+
+    // Invalider le cache de l'utilisateur après création
+    console.log('🗑️ [Projects API] Invalidation du cache utilisateur après création')
+    invalidateUserCache(userId)
 
     // Tracker la création du projet
     const { ipAddress, userAgent } = extractRequestInfo(request)
@@ -276,15 +216,8 @@ async function postHandler(request) {
       error: 'Erreur serveur', 
       details: process.env.NODE_ENV === 'development' ? error.message : undefined 
     }, { status: 500 })
-  } finally {
-    try {
-      await prisma.$disconnect()
-      console.log('✅ [Projects API] Déconnexion de la base de données après création')
-    } catch (disconnectError) {
-      console.error('⚠️ [Projects API] Erreur lors de la déconnexion:', disconnectError)
-    }
   }
 }
 
-export const GET = withApiLogging(getHandler)
-export const POST = withApiLogging(postHandler) 
+export const GET = withApiLogging(getHandler, { isInternal: true })
+export const POST = withApiLogging(postHandler, { isInternal: true }) 
