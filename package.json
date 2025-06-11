@@ -18,6 +18,7 @@
     "optimize:prod": "node scripts/optimize-production.js",
     "test:optimizations": "node scripts/test-optimizations.js",
     "test:local": "node scripts/test-local-config.js",
+    "test:prod": "node scripts/test-production.js",
     "clear-sw": "node scripts/clear-sw.js",
     "restore-sw": "node scripts/restore-sw.js",
     "diagnose": "node scripts/diagnose-production.js",
