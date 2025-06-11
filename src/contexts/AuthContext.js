@@ -97,15 +97,40 @@ export function AuthProvider({ children }) {
         if (userData.theme && userData.theme !== 'system') {
           localStorage.setItem('theme', userData.theme)
         }
-      } else {
-        console.error('❌ [AuthContext] Token invalide, suppression du cookie')
-        Cookies.remove('token')
+      } else if (response.status === 401) {
+        // Token invalide ou expiré
+        console.error('❌ [AuthContext] Token invalide ou expiré, suppression du cookie')
+        
+        const isProduction = process.env.NODE_ENV === 'production'
+        const cookieOptions = { path: '/' }
+        
+        if (isProduction && window.location.hostname !== 'localhost') {
+          const hostname = window.location.hostname
+          if (hostname.includes('.')) {
+            const parts = hostname.split('.')
+            if (parts.length >= 2) {
+              cookieOptions.domain = `.${parts.slice(-2).join('.')}`
+            }
+          }
+        }
+        
+        Cookies.remove('token', cookieOptions)
         setUser(null)
+      } else {
+        // Autres erreurs (500, 503, etc.) - ne pas supprimer le token
+        console.error('❌ [AuthContext] Erreur serveur lors de la vérification:', response.status)
+        // Garder l'utilisateur connecté en cas d'erreur serveur temporaire
       }
     } catch (error) {
       console.error('❌ [AuthContext] Erreur lors de la vérification de l\'authentification:', error)
-      // Ne pas supprimer le token en cas d'erreur réseau
-      // Cookies.remove('token')
+      
+      // Distinguer les erreurs réseau des autres erreurs
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        console.log('🌐 [AuthContext] Erreur réseau détectée, conservation du token')
+        // Ne pas supprimer le token en cas d'erreur réseau
+      } else {
+        console.log('⚠️ [AuthContext] Erreur non-réseau, investigation nécessaire')
+      }
     } finally {
       console.log('✅ [AuthContext] Fin de checkAuth')
       setLoading(false)
@@ -128,12 +153,33 @@ export function AuthProvider({ children }) {
 
       if (response.ok) {
         console.log('✅ [AuthContext] Connexion réussie, définition du cookie')
-        // Cookie avec options sécurisées
-        Cookies.set('token', data.token, { 
-          expires: 7,
-          secure: window.location.protocol === 'https:',
-          sameSite: 'lax'
-        })
+        
+        // Configuration des cookies adaptée à l'environnement
+        const isProduction = process.env.NODE_ENV === 'production'
+        const isHttps = window.location.protocol === 'https:'
+        
+        const cookieOptions = {
+          expires: 7, // 7 jours
+          secure: isHttps, // Sécurisé si HTTPS
+          sameSite: 'lax', // Protection CSRF
+          path: '/', // Disponible sur tout le site
+        }
+        
+        // En production, ajouter le domaine si nécessaire
+        if (isProduction && window.location.hostname !== 'localhost') {
+          // Pour les sous-domaines, utiliser le domaine principal
+          const hostname = window.location.hostname
+          if (hostname.includes('.')) {
+            const parts = hostname.split('.')
+            if (parts.length >= 2) {
+              cookieOptions.domain = `.${parts.slice(-2).join('.')}`
+            }
+          }
+        }
+        
+        console.log('🍪 [AuthContext] Configuration du cookie:', cookieOptions)
+        
+        Cookies.set('token', data.token, cookieOptions)
         setUser(data.user)
         toast.success('Connexion réussie !')
         return { success: true }
@@ -193,7 +239,27 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     console.log('🔍 [AuthContext] Déconnexion de l\'utilisateur')
-    Cookies.remove('token')
+    
+    // Supprimer le cookie avec les mêmes options que lors de la création
+    const isProduction = process.env.NODE_ENV === 'production'
+    const cookieOptions = {
+      path: '/',
+    }
+    
+    // En production, spécifier le domaine si nécessaire
+    if (isProduction && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      const hostname = window.location.hostname
+      if (hostname.includes('.')) {
+        const parts = hostname.split('.')
+        if (parts.length >= 2) {
+          cookieOptions.domain = `.${parts.slice(-2).join('.')}`
+        }
+      }
+    }
+    
+    console.log('🍪 [AuthContext] Suppression du cookie avec options:', cookieOptions)
+    
+    Cookies.remove('token', cookieOptions)
     setUser(null)
     toast.success('Déconnexion réussie')
   }

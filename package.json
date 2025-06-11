@@ -13,6 +13,7 @@
     "db:seed": "node prisma/seed.js",
     "db:seed-collab": "node prisma/seed-collaboration.js",
     "test:email": "node scripts/test-email.js",
+    "test:cookies": "node scripts/test-cookies.js",
     "clear-sw": "node scripts/clear-sw.js",
     "restore-sw": "node scripts/restore-sw.js",
     "diagnose": "node scripts/diagnose-production.js",

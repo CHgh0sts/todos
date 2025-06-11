@@ -13,15 +13,15 @@ console.log('🔍 Diagnostic de la configuration de production...\n')
 // Vérifier les variables d'environnement
 console.log('📋 Variables d\'environnement:')
 console.log('- NODE_ENV:', process.env.NODE_ENV || 'non défini')
-console.log('- DATABASE_URL:', process.env.DATABASE_URL ? '✅ défini' : '❌ manquant')
 console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✅ défini' : '❌ manquant')
 console.log('- NEXTAUTH_SECRET:', process.env.NEXTAUTH_SECRET ? '✅ défini' : '❌ manquant')
 console.log('- NEXTAUTH_URL:', process.env.NEXTAUTH_URL || 'non défini')
-console.log('')
+console.log('- DATABASE_URL:', process.env.DATABASE_URL ? '✅ défini' : '❌ manquant')
+console.log('- NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL || 'non défini')
 
 // Tester la connexion à la base de données
 async function testDatabase() {
-  console.log('🔍 Test de connexion à la base de données...')
+  console.log('\n🔍 Test de connexion à la base de données...')
   
   const prisma = new PrismaClient()
   
@@ -36,6 +36,14 @@ async function testDatabase() {
     // Tester la table des projets
     const projectCount = await prisma.project.count()
     console.log(`✅ Nombre de projets dans la base: ${projectCount}`)
+    
+    // Tester un utilisateur spécifique pour l'authentification
+    if (userCount > 0) {
+      const testUser = await prisma.user.findFirst({
+        select: { id: true, email: true, name: true, isVerified: true }
+      })
+      console.log(`✅ Utilisateur de test trouvé: ${testUser.email} (vérifié: ${testUser.isVerified})`)
+    }
     
   } catch (error) {
     console.error('❌ Erreur de connexion à la base de données:', error.message)
@@ -69,35 +77,28 @@ function testJWT() {
   }
 }
 
-// Vérifier les permissions de fichiers
+// Vérifier les permissions des fichiers
 function checkFilePermissions() {
-  console.log('\n🔍 Vérification des permissions...')
+  console.log('\n🔍 Vérification des permissions de fichiers...')
   
   const fs = require('fs')
   const path = require('path')
   
-  try {
-    // Vérifier le répertoire .next
-    const nextDir = path.join(process.cwd(), '.next')
-    if (fs.existsSync(nextDir)) {
-      console.log('✅ Répertoire .next existe')
-      const stats = fs.statSync(nextDir)
-      console.log('✅ Permissions .next:', stats.mode.toString(8))
-    } else {
-      console.log('⚠️  Répertoire .next n\'existe pas (normal en développement)')
+  const filesToCheck = [
+    '.next',
+    'prisma',
+    'package.json',
+    'next.config.js'
+  ]
+  
+  filesToCheck.forEach(file => {
+    try {
+      const stats = fs.statSync(file)
+      console.log(`✅ ${file}: accessible (${stats.isDirectory() ? 'dossier' : 'fichier'})`)
+    } catch (error) {
+      console.error(`❌ ${file}: ${error.message}`)
     }
-    
-    // Vérifier le répertoire prisma
-    const prismaDir = path.join(process.cwd(), 'prisma')
-    if (fs.existsSync(prismaDir)) {
-      console.log('✅ Répertoire prisma existe')
-    } else {
-      console.log('❌ Répertoire prisma manquant')
-    }
-    
-  } catch (error) {
-    console.error('❌ Erreur lors de la vérification des permissions:', error.message)
-  }
+  })
 }
 
 // Tester les en-têtes HTTP
@@ -109,6 +110,64 @@ function testHeaders() {
   console.log('✅ Format d\'en-tête Authorization testé:', testToken.startsWith('Bearer '))
 }
 
+// Tester la configuration des cookies
+function testCookieConfiguration() {
+  console.log('\n🔍 Test de configuration des cookies...')
+  
+  // Simuler différents environnements
+  const environments = [
+    { hostname: 'localhost', protocol: 'http:', env: 'development' },
+    { hostname: 'todo.chghosts.fr', protocol: 'https:', env: 'production' },
+    { hostname: 'www.todo.chghosts.fr', protocol: 'https:', env: 'production' }
+  ]
+  
+  environments.forEach(env => {
+    console.log(`\n📍 Test pour ${env.hostname} (${env.protocol})`)
+    
+    const isProduction = env.env === 'production'
+    const isHttps = env.protocol === 'https:'
+    
+    const cookieOptions = {
+      expires: 7,
+      secure: isHttps,
+      sameSite: 'lax',
+      path: '/',
+    }
+    
+    if (isProduction && env.hostname !== 'localhost') {
+      if (env.hostname.includes('.')) {
+        const parts = env.hostname.split('.')
+        if (parts.length >= 2) {
+          cookieOptions.domain = `.${parts.slice(-2).join('.')}`
+        }
+      }
+    }
+    
+    console.log('   Options de cookie calculées:', JSON.stringify(cookieOptions, null, 2))
+  })
+}
+
+// Tester la configuration réseau
+function testNetworkConfiguration() {
+  console.log('\n🔍 Test de configuration réseau...')
+  
+  const allowedOrigins = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+    'https://todo.chghosts.fr',
+    'https://www.todo.chghosts.fr'
+  ].filter(Boolean)
+  
+  console.log('✅ Origines CORS autorisées:')
+  allowedOrigins.forEach(origin => {
+    console.log(`   - ${origin}`)
+  })
+  
+  if (allowedOrigins.length === 0) {
+    console.error('❌ Aucune origine CORS configurée!')
+  }
+}
+
 // Exécuter tous les tests
 async function runDiagnostics() {
   try {
@@ -116,13 +175,21 @@ async function runDiagnostics() {
     testJWT()
     checkFilePermissions()
     testHeaders()
+    testCookieConfiguration()
+    testNetworkConfiguration()
     
     console.log('\n🎉 Diagnostic terminé!')
     console.log('\n💡 Si vous voyez des erreurs:')
     console.log('   1. Vérifiez que toutes les variables d\'environnement sont définies')
     console.log('   2. Vérifiez la connexion à la base de données')
     console.log('   3. Vérifiez que Prisma est correctement configuré')
-    console.log('   4. Redémarrez l\'application après les corrections')
+    console.log('   4. Vérifiez la configuration des cookies en production')
+    console.log('   5. Redémarrez l\'application après les corrections')
+    
+    console.log('\n🔧 Commandes utiles:')
+    console.log('   - Régénérer Prisma: npx prisma generate')
+    console.log('   - Appliquer migrations: npx prisma migrate deploy')
+    console.log('   - Nettoyer le cache: rm -rf .next && npm run build')
     
   } catch (error) {
     console.error('❌ Erreur lors du diagnostic:', error)
