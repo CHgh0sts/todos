@@ -1,6 +1,6 @@
-const CACHE_NAME = 'collabwave-v1.0.0'
-const STATIC_CACHE_NAME = 'collabwave-static-v1.0.0'
-const DYNAMIC_CACHE_NAME = 'collabwave-dynamic-v1.0.0'
+const CACHE_NAME = 'collabwave-v1.0.1'
+const STATIC_CACHE_NAME = 'collabwave-static-v1.0.1'
+const DYNAMIC_CACHE_NAME = 'collabwave-dynamic-v1.0.1'
 
 // Fichiers à mettre en cache immédiatement
 const STATIC_ASSETS = [
@@ -78,15 +78,21 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Stratégie pour les pages HTML
-  if (request.destination === 'document') {
-    event.respondWith(handlePageRequest(request))
+  // Ignorer les requêtes vers des domaines externes (sauf APIs)
+  if (url.origin !== self.location.origin && 
+      !url.hostname.includes('todo.chghosts.fr')) {
     return
   }
 
   // Stratégie pour les APIs
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(handleApiRequest(request))
+    return
+  }
+
+  // Stratégie pour les pages HTML
+  if (request.destination === 'document') {
+    event.respondWith(handlePageRequest(request))
     return
   }
 
@@ -264,19 +270,17 @@ async function handleDefaultRequest(request) {
   }
 }
 
-// Gestion des messages du client
+// Gestion des messages du client - IMPORTANT pour les mises à jour
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('🔄 Service Worker: Activation forcée de la nouvelle version')
     self.skipWaiting()
   }
   
   if (event.data && event.data.type === 'GET_VERSION') {
     event.ports[0].postMessage({ version: CACHE_NAME })
   }
-})
-
-// Notification de mise à jour disponible
-self.addEventListener('message', (event) => {
+  
   if (event.data && event.data.type === 'CHECK_UPDATE') {
     // Vérifier s'il y a une nouvelle version
     caches.keys().then((cacheNames) => {
@@ -286,4 +290,4 @@ self.addEventListener('message', (event) => {
   }
 })
 
-console.log('🎯 Service Worker CollabWave chargé - Version:', CACHE_NAME) 
+console.log('🎯 Service Worker CollabWave chargé - Version:', CACHE_NAME)
