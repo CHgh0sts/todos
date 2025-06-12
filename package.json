@@ -43,7 +43,10 @@
     "test-category-tracking": "node scripts/test-category-tracking.js",
     "test-category-activities": "node scripts/test-category-tracking.js --show",
     "test-edit-tracking": "node scripts/test-edit-tracking.js",
-    "test-new-logging-model": "node scripts/test-new-logging-model.js"
+    "test-new-logging-model": "node scripts/test-new-logging-model.js",
+    "test:admin-delete": "node scripts/test-admin-delete.js",
+    "test:admin-todos-modal": "node scripts/test-admin-todos-modal.js",
+    "test:admin-todos-unrestricted": "node scripts/test-admin-todos-unrestricted.js"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",

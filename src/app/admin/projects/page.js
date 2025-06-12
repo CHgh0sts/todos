@@ -22,6 +22,10 @@ export default function AdminProjects() {
   })
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState(null)
+  const [showTodosModal, setShowTodosModal] = useState(false)
+  const [selectedProject, setSelectedProject] = useState(null)
+  const [projectTodos, setProjectTodos] = useState([])
+  const [loadingTodos, setLoadingTodos] = useState(false)
 
   useEffect(() => {
     if (!authLoading) {
@@ -79,7 +83,7 @@ export default function AdminProjects() {
 
   const deleteProject = async (projectId) => {
     try {
-      const response = await fetch(`/api/admin/projects/${projectId}`, {
+      const response = await fetch(`/api/admin/projects?projectId=${projectId}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       })
@@ -111,6 +115,42 @@ export default function AdminProjects() {
     setFilters(prev => ({ ...prev, page: newPage }))
   }
 
+  const fetchProjectTodos = async (projectId) => {
+    try {
+      setLoadingTodos(true)
+      
+      const response = await fetch(`/api/admin/projects/${projectId}/todos`, {
+        headers: getAuthHeaders()
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setProjectTodos(data.todos || [])
+      } else {
+        toast.error('Erreur lors du chargement des tâches')
+        setProjectTodos([])
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+      toast.error('Erreur lors du chargement des tâches')
+      setProjectTodos([])
+    } finally {
+      setLoadingTodos(false)
+    }
+  }
+
+  const openTodosModal = async (project) => {
+    setSelectedProject(project)
+    setShowTodosModal(true)
+    await fetchProjectTodos(project.id)
+  }
+
+  const closeTodosModal = () => {
+    setShowTodosModal(false)
+    setSelectedProject(null)
+    setProjectTodos([])
+  }
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('fr-FR', {
       day: '2-digit',
@@ -119,6 +159,36 @@ export default function AdminProjects() {
       hour: '2-digit',
       minute: '2-digit'
     })
+  }
+
+  const formatDateOnly = (dateString) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+    }
+  }
+
+  const getPriorityLabel = (priority) => {
+    switch (priority) {
+      case 'high': return '🔴 Haute'
+      case 'medium': return '🟡 Moyenne'
+      case 'low': return '🟢 Basse'
+      default: return '⚪ Non définie'
+    }
+  }
+
+  const isOverdue = (dueDate) => {
+    return dueDate && new Date(dueDate) < new Date()
   }
 
   if (authLoading || loading) {
@@ -374,16 +444,16 @@ export default function AdminProjects() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex space-x-2">
-                          <Link
-                            href={`/todos/${project.id}?admin=true`}
+                          <button
+                            onClick={() => openTodosModal(project)}
                             className="inline-flex items-center justify-center w-8 h-8 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md transition-colors"
-                            title="Voir le projet (mode admin)"
+                            title="Voir les tâches du projet"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
-                          </Link>
+                          </button>
                           
                           <Link
                             href={`/todos/${project.id}?admin=true&edit=true`}
@@ -449,6 +519,207 @@ export default function AdminProjects() {
           </div>
         </div>
       </div>
+
+      {/* Modal des tâches du projet */}
+      {showTodosModal && selectedProject && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center space-x-3">
+                <span className="text-2xl">{selectedProject.emoji}</span>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Tâches du projet : {selectedProject.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Propriétaire : {selectedProject.owner?.name || 'Utilisateur supprimé'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={closeTodosModal}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Statistiques */}
+            {projectTodos.length > 0 && (
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                <div className="grid grid-cols-4 gap-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{projectTodos.length}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Total</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {projectTodos.filter(todo => todo.completed).length}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Terminées</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                      {projectTodos.filter(todo => !todo.completed).length}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">En cours</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                      {projectTodos.filter(todo => !todo.completed && isOverdue(todo.dueDate)).length}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">En retard</div>
+                  </div>
+                </div>
+                
+                {/* Barre de progression */}
+                <div className="relative w-full bg-gray-200 dark:bg-gray-600 rounded-full h-4">
+                  <div 
+                    className="bg-green-500 h-4 rounded-full transition-all duration-300" 
+                    style={{ width: `${projectTodos.length > 0 ? (projectTodos.filter(todo => todo.completed).length / projectTodos.length) * 100 : 0}%` }}
+                  ></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-semibold text-white mix-blend-difference">
+                      {projectTodos.length > 0 ? Math.round((projectTodos.filter(todo => todo.completed).length / projectTodos.length) * 100) : 0}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Contenu */}
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              {loadingTodos ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600 dark:text-gray-400">Chargement des tâches...</span>
+                </div>
+              ) : projectTodos.length === 0 ? (
+                <div className="text-center py-12">
+                  <svg className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <p className="text-gray-500 dark:text-gray-400 text-lg">Aucune tâche trouvée</p>
+                  <p className="text-gray-400 dark:text-gray-500">Ce projet ne contient pas encore de tâches</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {projectTodos.map((todo) => (
+                    <div
+                      key={todo.id}
+                      className={`p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border-l-4 ${
+                        todo.completed ? 'border-l-green-500' : 
+                        isOverdue(todo.dueDate) ? 'border-l-red-500' :
+                        todo.priority === 'high' ? 'border-l-red-400' :
+                        todo.priority === 'medium' ? 'border-l-yellow-400' :
+                        'border-l-blue-400'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                          todo.completed
+                            ? 'bg-green-500 border-green-500 text-white'
+                            : 'border-gray-300 dark:border-gray-600'
+                        }`}>
+                          {todo.completed && (
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className={`font-medium ${
+                                todo.completed ? 'text-gray-500 dark:text-gray-400 line-through' : 'text-gray-900 dark:text-white'
+                              }`}>
+                                {todo.title}
+                              </h4>
+                              
+                              {todo.description && (
+                                <p className={`mt-1 text-sm ${
+                                  todo.completed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-600 dark:text-gray-300'
+                                }`}>
+                                  {todo.description}
+                                </p>
+                              )}
+                              
+                              <div className="flex items-center gap-3 mt-2 flex-wrap">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(todo.priority)}`}>
+                                  {getPriorityLabel(todo.priority)}
+                                </span>
+                                
+                                {todo.category && (
+                                  <span 
+                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                                    style={{ backgroundColor: todo.category.color }}
+                                  >
+                                    <span className="mr-1">{todo.category.emoji || '📁'}</span>
+                                    {todo.category.name}
+                                  </span>
+                                )}
+
+                                {todo.user && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                                    <svg className="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    {todo.user.name}
+                                  </span>
+                                )}
+                                
+                                {todo.dueDate && (
+                                  <span className={`text-xs ${
+                                    isOverdue(todo.dueDate) ? 'text-red-600 dark:text-red-400 font-medium' :
+                                    new Date(todo.dueDate).toDateString() === new Date().toDateString() ? 'text-orange-600 dark:text-orange-400 font-medium' :
+                                    'text-gray-500 dark:text-gray-400'
+                                  }`}>
+                                    {isOverdue(todo.dueDate) && '⚠️ '}
+                                    {new Date(todo.dueDate).toDateString() === new Date().toDateString() ? '📅 Aujourd\'hui' : 
+                                     `📅 ${formatDateOnly(todo.dueDate)}`}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {projectTodos.length} tâche{projectTodos.length > 1 ? 's' : ''} au total
+              </div>
+              <div className="flex space-x-3">
+                <Link
+                  href={`/todos/${selectedProject.id}?admin=true`}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Gérer le projet
+                </Link>
+                <button
+                  onClick={closeTodosModal}
+                  className="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors text-sm font-medium"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de confirmation de suppression */}
       {showDeleteModal && projectToDelete && (
