@@ -32,6 +32,9 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
   const [linkExpiresAt, setLinkExpiresAt] = useState('')
   const [linkMaxUses, setLinkMaxUses] = useState('')
 
+  // États pour le changement de permissions
+  const [changingPermission, setChangingPermission] = useState(null)
+
   useEffect(() => {
     if (isOpen && project) {
       fetchCollaborators()
@@ -132,15 +135,10 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
   const inviteFriends = async () => {
     if (selectedFriends.length === 0) return
 
-    console.log('Invitation d\'amis:', { selectedFriends, friends, friendsPermission })
-
     try {
-      // Récupérer les emails des amis sélectionnés
       const selectedFriendsData = friends.filter(friend => 
         selectedFriends.includes(friend.id)
       )
-
-      console.log('Amis sélectionnés:', selectedFriendsData)
 
       const promises = selectedFriendsData.map(friend => 
         fetch(`/api/projects/${project.id}/share`, {
@@ -155,7 +153,6 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
 
       const results = await Promise.all(promises)
       
-      // Vérifier les résultats et afficher les erreurs spécifiques
       let successful = 0
       let errors = []
       
@@ -283,6 +280,32 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
     }
   }
 
+  const changeCollaboratorPermission = async (shareId, newPermission) => {
+    try {
+      setChangingPermission(shareId)
+      const response = await fetch(`/api/project-shares/${shareId}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          permission: newPermission
+        })
+      })
+      
+      if (response.ok) {
+        toast.success('Permissions mises à jour')
+        fetchCollaborators()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Erreur lors de la mise à jour')
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+      toast.error('Erreur lors de la mise à jour')
+    } finally {
+      setChangingPermission(null)
+    }
+  }
+
   const getPermissionLabel = (permission) => {
     switch (permission) {
       case 'view': return 'Lecture'
@@ -318,20 +341,21 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
       size="large"
     >
       <div className="space-y-6">
-        {/* Onglets */}
+        {/* Onglets - Responsive */}
         <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="-mb-px flex space-x-8">
+          <nav className="-mb-px flex space-x-2 sm:space-x-8 overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors min-w-fit ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
                 }`}
               >
-                {tab.label}
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
                 {tab.count !== null && (
                   <span className="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-300 py-0.5 px-2 rounded-full text-xs">
                     {tab.count}
@@ -359,16 +383,16 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
                     👑 Propriétaire
                   </h4>
                   <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="flex-1">
                         <div className="font-medium text-gray-900 dark:text-white">
                           {project.user.name}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                        <div className="text-sm text-gray-500 dark:text-gray-400 break-all">
                           {project.user.email}
                         </div>
                       </div>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+                      <span className="self-start sm:self-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
                         Propriétaire
                       </span>
                     </div>
@@ -384,23 +408,46 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
                     <div className="space-y-2">
                       {collaborators.map((share) => (
                         <div key={share.id} className="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-3">
-                          <div className="flex items-center justify-between">
-                            <div>
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div className="flex-1">
                               <div className="font-medium text-gray-900 dark:text-white">
                                 {share.user.name}
                               </div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                              <div className="text-sm text-gray-500 dark:text-gray-400 break-all">
                                 {share.user.email}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPermissionColor(share.permission)}`}>
-                                {getPermissionLabel(share.permission)}
-                              </span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {/* Sélecteur de permissions */}
+                              {(project.isOwner || project.permission === 'admin') ? (
+                                <div className="relative">
+                                  <select
+                                    value={share.permission}
+                                    onChange={(e) => changeCollaboratorPermission(share.id, e.target.value)}
+                                    disabled={changingPermission === share.id}
+                                    className={`px-2 py-1 rounded-full text-xs font-medium border-0 focus:ring-2 focus:ring-blue-500 cursor-pointer disabled:opacity-50 ${getPermissionColor(share.permission)}`}
+                                  >
+                                    <option value="view">Lecture</option>
+                                    <option value="edit">Modification</option>
+                                    <option value="admin">Administration</option>
+                                  </select>
+                                  {changingPermission === share.id && (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="animate-spin rounded-full h-3 w-3 border border-gray-400 border-t-transparent"></div>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPermissionColor(share.permission)}`}>
+                                  {getPermissionLabel(share.permission)}
+                                </span>
+                              )}
+                              
+                              {/* Bouton supprimer */}
                               {(project.isOwner || project.permission === 'admin') && (
                                 <button
                                   onClick={() => removeCollaborator(share.id)}
-                                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"
+                                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                   title="Retirer du projet"
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -425,16 +472,16 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
                     <div className="space-y-2">
                       {invitations.map((invitation) => (
                         <div key={invitation.id} className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700 p-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="font-medium text-gray-900 dark:text-white">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900 dark:text-white break-all">
                                 {invitation.email}
                               </div>
                               <div className="text-sm text-gray-500 dark:text-gray-400">
                                 Invité par {invitation.sender.name}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPermissionColor(invitation.permission)}`}>
                                 {getPermissionLabel(invitation.permission)}
                               </span>
@@ -443,7 +490,7 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
                               </span>
                               <button
                                 onClick={() => cancelInvitation(invitation.id)}
-                                className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"
+                                className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                 title="Annuler l'invitation"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -474,8 +521,8 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
             {/* Onglet Inviter */}
             {activeTab === 'invite' && (
               <div className="space-y-6">
-                {/* Méthodes d'invitation */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Méthodes d'invitation - Responsive Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Invitation par email */}
                   <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                     <div className="text-center">
@@ -500,25 +547,24 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
                         <span className="text-2xl">👥</span>
                       </div>
                       <h3 className="font-medium text-gray-900 dark:text-white mb-2">Inviter des amis</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Sélectionnez dans votre liste d'amis</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Invitez vos amis déjà connectés</p>
                       <button
                         onClick={() => setShowFriendsModal(!showFriendsModal)}
                         className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                        disabled={friends.length === 0}
                       >
-                        Inviter des amis ({friends.length})
+                        Inviter des amis
                       </button>
                     </div>
                   </div>
 
-                  {/* Lien de partage */}
-                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                  {/* Création de lien */}
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:col-span-2 lg:col-span-1">
                     <div className="text-center">
                       <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center mx-auto mb-3">
                         <span className="text-2xl">🔗</span>
                       </div>
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-2">Créer un lien</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Générez un lien que vous pouvez partager</p>
+                      <h3 className="font-medium text-gray-900 dark:text-white mb-2">Lien de partage</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Créez un lien que vous pouvez partager</p>
                       <button
                         onClick={() => setShowLinkModal(!showLinkModal)}
                         className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
@@ -529,86 +575,278 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
                   </div>
                 </div>
 
-                {/* Suppression des anciens formulaires - ils seront remplacés par des modals */}
+                {/* Formulaire d'invitation par email */}
+                {showEmailModal && (
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/10">
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-4">📧 Invitation par email</h3>
+                    <form onSubmit={sendEmailInvitation} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Adresse email
+                        </label>
+                        <input
+                          type="email"
+                          value={inviteEmail}
+                          onChange={(e) => setInviteEmail(e.target.value)}
+                          placeholder="exemple@email.com"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Permissions
+                        </label>
+                        <select
+                          value={invitePermission}
+                          onChange={(e) => setInvitePermission(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        >
+                          <option value="view">Lecture seule</option>
+                          <option value="edit">Modification</option>
+                          <option value="admin">Administration</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Message personnalisé (optionnel)
+                        </label>
+                        <textarea
+                          value={inviteMessage}
+                          onChange={(e) => setInviteMessage(e.target.value)}
+                          placeholder="Ajoutez un message personnalisé..."
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                        />
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          type="submit"
+                          className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        >
+                          Envoyer l'invitation
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowEmailModal(false)}
+                          className="flex-1 sm:flex-none bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* Formulaire d'invitation d'amis */}
+                {showFriendsModal && (
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-green-50 dark:bg-green-900/10">
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-4">👥 Inviter des amis</h3>
+                    
+                    {friends.length === 0 ? (
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">
+                        Vous n'avez pas encore d'amis ajoutés. Ajoutez des amis depuis la page dédiée.
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Permissions pour les amis invités
+                          </label>
+                          <select
+                            value={friendsPermission}
+                            onChange={(e) => setFriendsPermission(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          >
+                            <option value="view">Lecture seule</option>
+                            <option value="edit">Modification</option>
+                            <option value="admin">Administration</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Sélectionnez les amis à inviter
+                          </label>
+                          <div className="max-h-40 overflow-y-auto space-y-2 border border-gray-200 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700">
+                            {friends.map((friend) => (
+                              <label key={friend.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedFriends.includes(friend.id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedFriends([...selectedFriends, friend.id])
+                                    } else {
+                                      setSelectedFriends(selectedFriends.filter(id => id !== friend.id))
+                                    }
+                                  }}
+                                  className="rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500"
+                                />
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900 dark:text-white text-sm">
+                                    {friend.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 break-all">
+                                    {friend.email}
+                                  </div>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <button
+                            onClick={inviteFriends}
+                            disabled={selectedFriends.length === 0}
+                            className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                          >
+                            Inviter {selectedFriends.length > 0 ? `(${selectedFriends.length})` : ''}
+                          </button>
+                          <button
+                            onClick={() => setShowFriendsModal(false)}
+                            className="flex-1 sm:flex-none bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Formulaire de création de lien */}
+                {showLinkModal && (
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-purple-50 dark:bg-purple-900/10">
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-4">🔗 Créer un lien de partage</h3>
+                    <form onSubmit={createShareLink} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Permissions
+                        </label>
+                        <select
+                          value={linkPermission}
+                          onChange={(e) => setLinkPermission(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        >
+                          <option value="view">Lecture seule</option>
+                          <option value="edit">Modification</option>
+                          <option value="admin">Administration</option>
+                        </select>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Date d'expiration (optionnel)
+                          </label>
+                          <input
+                            type="datetime-local"
+                            value={linkExpiresAt}
+                            onChange={(e) => setLinkExpiresAt(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Utilisation max (optionnel)
+                          </label>
+                          <input
+                            type="number"
+                            value={linkMaxUses}
+                            onChange={(e) => setLinkMaxUses(e.target.value)}
+                            placeholder="Illimité"
+                            min="1"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          type="submit"
+                          className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                        >
+                          Créer le lien
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowLinkModal(false)}
+                          className="flex-1 sm:flex-none bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Onglet Liens */}
             {activeTab === 'links' && (
-              <div className="space-y-6">
-                {/* Bouton pour créer un nouveau lien */}
-                <div className="flex justify-between items-center">
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    🔗 Liens de partage ({shareLinks.length})
-                  </h4>
-                  <button
-                    onClick={() => setShowLinkModal(true)}
-                    className="inline-flex items-center px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-                  >
-                    <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <div className="space-y-4">
+                {shareLinks.length === 0 ? (
+                  <div className="text-center py-8">
+                    <svg className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.1a3 3 0 10-4.243-4.243l-1.102 1.1a1 1 0 00-1.414 1.414l1.1-1.1a5 5 0 017.072 7.072l-1.1 1.1a1 1 0 00-1.414-1.414l1.1-1.1a3 3 0 10-4.243-4.243l1.102 1.1a3 3 0 004.243 4.243l1.102-1.1a5 5 0 000-7.072l-4-4zM8 12a1 1 0 100-2 1 1 0 000 2z" />
                     </svg>
-                    Nouveau lien
-                  </button>
-                </div>
-
-                {/* Liste des liens */}
-                {shareLinks.length > 0 ? (
+                    <p className="text-gray-500 dark:text-gray-400">Aucun lien de partage créé</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">Utilisez l'onglet "Inviter" pour créer des liens</p>
+                  </div>
+                ) : (
                   <div className="space-y-3">
                     {shareLinks.map((link) => (
                       <div key={link.id} className="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4">
-                        <div className="flex items-start justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPermissionColor(link.permission)}`}>
                                 {getPermissionLabel(link.permission)}
                               </span>
-                              {link.expiresAt && (
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  Expire le {new Date(link.expiresAt).toLocaleDateString('fr-FR')}
-                                </span>
-                              )}
-                              {link.maxUses && (
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  {link.usedCount || 0}/{link.maxUses} utilisations
-                                </span>
-                              )}
+                              <span className="text-sm text-gray-500 dark:text-gray-400">
+                                Créé par {link.user.name}
+                              </span>
                             </div>
-                            <div className="bg-gray-50 dark:bg-gray-800 rounded p-2 font-mono text-sm break-all">
-                              {`${window.location.protocol}//${window.location.host}/share/${link.token}`}
+                            
+                            <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                              <div>Utilisé: {link.usedCount}/{link.maxUses || '∞'} fois</div>
+                              {link.expiresAt && (
+                                <div>
+                                  Expire: {new Date(link.expiresAt).toLocaleString('fr-FR')}
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 ml-4">
+                          
+                          <div className="flex items-center gap-2">
                             <button
                               onClick={() => copyShareLink(link.id)}
-                              className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1"
-                              title="Copier le lien"
+                              className="flex items-center gap-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                               </svg>
+                              <span className="hidden sm:inline">Copier</span>
                             </button>
                             <button
                               onClick={() => deleteShareLink(link.id)}
-                              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"
-                              title="Supprimer le lien"
+                              className="flex items-center gap-1 bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
+                              <span className="hidden sm:inline">Supprimer</span>
                             </button>
                           </div>
                         </div>
                       </div>
                     ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <svg className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                    <p className="text-gray-500 dark:text-gray-400">Aucun lien de partage créé</p>
-                    <p className="text-sm text-gray-400 dark:text-gray-500">Créez un lien pour partager ce projet facilement</p>
                   </div>
                 )}
               </div>
@@ -616,249 +854,6 @@ export default function ProjectCollaborationModal({ isOpen, onClose, project }) 
           </>
         )}
       </div>
-
-      {/* Modal d'invitation par email */}
-      <Modal
-        isOpen={showEmailModal}
-        onClose={() => setShowEmailModal(false)}
-        title="📧 Invitation par email"
-        description="Invitez quelqu'un à rejoindre ce projet par email"
-        size="large"
-      >
-        <form onSubmit={sendEmailInvitation} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Email de l'utilisateur *
-            </label>
-            <input
-              type="email"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="exemple@email.com"
-              required
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Permission
-            </label>
-            <select
-              value={invitePermission}
-              onChange={(e) => setInvitePermission(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-            >
-              <option value="view">👁️ Lecture seule</option>
-              <option value="edit">✏️ Modification</option>
-              <option value="admin">👑 Administration</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Message (optionnel)
-            </label>
-            <textarea
-              value={inviteMessage}
-              onChange={(e) => setInviteMessage(e.target.value)}
-              placeholder="Rejoignez-nous sur ce projet..."
-              rows={5}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base resize-none"
-            />
-          </div>
-          
-          <div className="flex gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
-            <button
-              type="submit"
-              className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-base"
-            >
-              Envoyer l'invitation
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowEmailModal(false)}
-              className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-base"
-            >
-              Annuler
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Modal d'invitation d'amis */}
-      <Modal
-        isOpen={showFriendsModal}
-        onClose={() => setShowFriendsModal(false)}
-        title="👥 Inviter des amis"
-        description="Sélectionnez vos amis à inviter sur ce projet"
-        size="large"
-      >
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Sélectionnez vos amis
-            </label>
-            {friends.length > 0 ? (
-              <div className="h-96 overflow-y-auto space-y-3 border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
-                {friends.map((friend) => (
-                  <label key={friend.id} className="flex items-center space-x-4 p-3 hover:bg-white dark:hover:bg-gray-800 rounded-lg cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all">
-                    <input
-                      type="checkbox"
-                      checked={selectedFriends.includes(friend.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedFriends([...selectedFriends, friend.id])
-                        } else {
-                          setSelectedFriends(selectedFriends.filter(id => id !== friend.id))
-                        }
-                      }}
-                      className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900 dark:text-white text-base">{friend.name}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{friend.email}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16 text-gray-500 dark:text-gray-400">
-                <svg className="w-20 h-20 mx-auto mb-6 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <p className="text-lg font-medium mb-2">Vous n'avez pas encore d'amis</p>
-                <p className="text-base">Ajoutez des amis depuis votre profil pour pouvoir les inviter</p>
-              </div>
-            )}
-          </div>
-          
-          {friends.length > 0 && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Permission
-                </label>
-                <select
-                  value={friendsPermission}
-                  onChange={(e) => setFriendsPermission(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
-                >
-                  <option value="view">👁️ Lecture seule</option>
-                  <option value="edit">✏️ Modification</option>
-                  <option value="admin">👑 Administration</option>
-                </select>
-              </div>
-              
-              <div className="flex gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
-                <button
-                  onClick={inviteFriends}
-                  disabled={selectedFriends.length === 0}
-                  className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed text-base"
-                >
-                  Inviter {selectedFriends.length} ami(s)
-                </button>
-                <button
-                  onClick={() => setShowFriendsModal(false)}
-                  className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-base"
-                >
-                  Annuler
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </Modal>
-
-      {/* Modal de création de lien */}
-      <Modal
-        isOpen={showLinkModal}
-        onClose={() => setShowLinkModal(false)}
-        title="🔗 Créer un lien de partage"
-        description="Générez un lien que vous pouvez partager avec d'autres personnes"
-        size="large"
-      >
-        <form onSubmit={createShareLink} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Permission
-            </label>
-            <select
-              value={linkPermission}
-              onChange={(e) => setLinkPermission(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base"
-            >
-              <option value="view">👁️ Lecture seule</option>
-              <option value="edit">✏️ Modification</option>
-              <option value="admin">👑 Administration</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Date d'expiration (optionnelle)
-            </label>
-            <input
-              type="datetime-local"
-              value={linkExpiresAt}
-              onChange={(e) => setLinkExpiresAt(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base"
-            />
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              Laissez vide pour un lien permanent
-            </p>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Nombre max d'utilisations (optionnel)
-            </label>
-            <input
-              type="number"
-              value={linkMaxUses}
-              onChange={(e) => setLinkMaxUses(e.target.value)}
-              placeholder="Illimité"
-              min="1"
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base"
-            />
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              Laissez vide pour un nombre illimité d'utilisations
-            </p>
-          </div>
-          
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-5">
-            <div className="flex items-start">
-              <svg className="w-6 h-6 text-blue-500 mt-0.5 mr-4 flex-shrink-0 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <h4 className="text-base font-medium text-blue-800 dark:text-blue-200 mb-2">À propos des liens de partage</h4>
-                <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
-                  Les personnes qui utilisent ce lien pourront accéder au projet avec les permissions définies. 
-                  Vous pouvez supprimer le lien à tout moment pour révoquer l'accès. Le lien sera automatiquement 
-                  désactivé si les limites d'expiration ou d'utilisation sont atteintes.
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
-            <button
-              type="submit"
-              className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium text-base"
-            >
-              Créer le lien
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowLinkModal(false)}
-              className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-base"
-            >
-              Annuler
-            </button>
-          </div>
-        </form>
-      </Modal>
     </Modal>
   )
 } 

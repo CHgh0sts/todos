@@ -193,8 +193,29 @@ async function postHandler(request) {
       console.error('Erreur lors du tracking de création de projet:', error)
     })
 
+    // Notifier via WebSocket que le projet a été créé
+    if (global.io) {
+      global.io.to(`user_${userId}`).emit('project_created', {
+        project: {
+          ...project,
+          isOwner: true,
+          permission: 'admin',
+          sharedWith: []
+        }
+      })
+    }
+
     console.log('✅ [Projects API] Projet créé avec succès:', { projectId: project.id, projectName: project.name })
-    return NextResponse.json(project, { status: 201 })
+    
+    // Ajouter les propriétés nécessaires pour l'affichage côté client
+    const projectWithPermissions = {
+      ...project,
+      isOwner: true,
+      permission: 'admin',
+      sharedWith: []
+    }
+    
+    return NextResponse.json(projectWithPermissions, { status: 201 })
     
   } catch (error) {
     console.error('❌ [Projects API] Erreur lors de la création du projet:', {

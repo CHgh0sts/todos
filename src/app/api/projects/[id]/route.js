@@ -223,12 +223,28 @@ export async function PUT(request, { params }) {
     const userShare = project.shares.find(share => share.userId === userId)
     const userPermission = isOwner ? 'admin' : userShare?.permission || 'view'
     
-    return NextResponse.json({
+    const responseData = {
       ...project,
       isOwner,
       permission: userPermission,
       sharedWith: project.shares
-    })
+    }
+
+    // Notifier via WebSocket que le projet a été mis à jour
+    if (global.io) {
+      // Notifier le propriétaire et les collaborateurs
+      global.io.to(`project_${parseInt(id)}`).emit('project_updated', responseData)
+      
+      // Notifier individuellement les collaborateurs
+      project.shares.forEach(share => {
+        global.io.to(`user_${share.userId}`).emit('project_updated', responseData)
+      })
+      
+      // Notifier le propriétaire
+      global.io.to(`user_${project.userId}`).emit('project_updated', responseData)
+    }
+    
+    return NextResponse.json(responseData)
   } catch (error) {
     console.error('Erreur lors de la mise à jour du projet:', error)
     return NextResponse.json({ error: 'Erreur lors de la mise à jour du projet' }, { status: 500 })
@@ -340,6 +356,29 @@ export async function DELETE(request, { params }) {
         id: parseInt(id)
       }
     })
+
+    // Notifier les utilisateurs concernés via WebSocket
+    if (global.io) {
+      // Notifier tous les utilisateurs connectés au projet
+      global.io.to(`project_${parseInt(id)}`).emit('project_deleted', {
+        projectId: parseInt(id),
+        projectName: projectAccess.name,
+        deletedBy: userId,
+        deletedByName: currentUser?.name || 'Utilisateur'
+      })
+      
+      // Notifier les collaborateurs individuellement
+      projectAccess.shares.forEach(share => {
+        if (share.userId !== userId) {
+          global.io.to(`user_${share.userId}`).emit('project_deleted', {
+            projectId: parseInt(id),
+            projectName: projectAccess.name,
+            deletedBy: userId,
+            deletedByName: currentUser?.name || 'Utilisateur'
+          })
+        }
+      })
+    }
     
     return NextResponse.json({ message: 'Projet supprimé avec succès' })
   } catch (error) {

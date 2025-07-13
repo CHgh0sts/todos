@@ -3,6 +3,98 @@ import jwt from 'jsonwebtoken'
 import prisma from '@/lib/prisma'
 import { verifyToken, getTokenFromRequest } from '@/lib/auth'
 
+// Modifier les permissions d'un collaborateur
+export async function PUT(request, { params }) {
+  try {
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Token manquant' }, { status: 401 })
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const userId = decoded.userId
+    const shareId = parseInt(params.id)
+
+    const { permission } = await request.json()
+
+    // Valider la permission
+    if (!['view', 'edit', 'admin'].includes(permission)) {
+      return NextResponse.json({ error: 'Permission invalide' }, { status: 400 })
+    }
+
+    // Récupérer le partage avec les informations du projet
+    const share = await prisma.projectShare.findUnique({
+      where: { id: shareId },
+      include: {
+        project: {
+          include: {
+            user: true
+          }
+        },
+        user: true
+      }
+    })
+
+    if (!share) {
+      return NextResponse.json({ error: 'Partage non trouvé' }, { status: 404 })
+    }
+
+    // Vérifier que l'utilisateur est le propriétaire du projet ou un admin
+    const isOwner = share.project.userId === userId
+    const isAdmin = await prisma.projectShare.findFirst({
+      where: {
+        projectId: share.projectId,
+        userId: userId,
+        permission: 'admin'
+      }
+    })
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ error: 'Permissions insuffisantes' }, { status: 403 })
+    }
+
+    // Mettre à jour les permissions
+    const updatedShare = await prisma.projectShare.update({
+      where: { id: shareId },
+      data: { permission },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    })
+
+    // Créer une notification pour l'utilisateur dont les permissions ont changé
+    await prisma.notification.create({
+      data: {
+        userId: share.userId,
+        type: 'permission_changed',
+        title: 'Permissions modifiées',
+        message: `Vos permissions sur le projet "${share.project.name}" ont été modifiées`,
+        data: JSON.stringify({
+          projectId: share.projectId,
+          newPermission: permission,
+          changedBy: userId
+        })
+      }
+    })
+
+    return NextResponse.json({ 
+      message: 'Permissions mises à jour avec succès',
+      share: updatedShare
+    })
+
+  } catch (error) {
+    console.error('Erreur lors de la modification des permissions:', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
+}
+
 // Supprimer un collaborateur d'un projet
 export async function DELETE(request, { params }) {
   try {

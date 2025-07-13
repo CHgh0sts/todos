@@ -240,6 +240,73 @@ function ProjectsPage() {
     }
   }
 
+  // Écouter les événements en temps réel
+  useEffect(() => {
+    const handleProjectDeleted = (event) => {
+      const { projectId } = event.detail
+      console.log('🗑️ [Projects Page] Projet supprimé reçu via WebSocket:', projectId)
+      
+      // Mettre à jour la liste des projets
+      setProjects(prevProjects => prevProjects.filter(project => project.id !== projectId))
+    }
+
+    const handleProjectUpdated = (event) => {
+      const updatedProject = event.detail
+      console.log('📝 [Projects Page] Projet mis à jour reçu via WebSocket:', updatedProject.id)
+      
+      // Mettre à jour le projet dans la liste
+      setProjects(prevProjects => 
+        prevProjects.map(project => 
+          project.id === updatedProject.id 
+            ? { ...project, ...updatedProject }
+            : project
+        )
+      )
+    }
+
+    const handleCollaboratorAdded = (event) => {
+      const { projectId } = event.detail
+      console.log('👥 [Projects Page] Collaborateur ajouté reçu via WebSocket:', projectId)
+      
+      // Rafraîchir les données du projet
+      fetchProjects()
+    }
+
+    const handleCollaboratorRemoved = (event) => {
+      const { projectId } = event.detail
+      console.log('👥 [Projects Page] Collaborateur supprimé reçu via WebSocket:', projectId)
+      
+      // Rafraîchir les données du projet
+      fetchProjects()
+    }
+
+    const handleProjectCreated = (event) => {
+      const { project } = event.detail
+      console.log('➕ [Projects Page] Nouveau projet créé reçu via WebSocket:', project.id)
+      
+      // Ajouter le nouveau projet à la liste (seulement si c'est le nôtre)
+      if (project.userId === user.id) {
+        setProjects(prevProjects => [project, ...prevProjects])
+      }
+    }
+
+    // Ajouter les écouteurs d'événements
+    window.addEventListener('project_deleted', handleProjectDeleted)
+    window.addEventListener('project_updated', handleProjectUpdated)
+    window.addEventListener('project_created', handleProjectCreated)
+    window.addEventListener('collaborator_added', handleCollaboratorAdded)
+    window.addEventListener('collaborator_removed', handleCollaboratorRemoved)
+
+    // Nettoyer les écouteurs lors du démontage
+    return () => {
+      window.removeEventListener('project_deleted', handleProjectDeleted)
+      window.removeEventListener('project_updated', handleProjectUpdated)
+      window.removeEventListener('project_created', handleProjectCreated)
+      window.removeEventListener('collaborator_added', handleCollaboratorAdded)
+      window.removeEventListener('collaborator_removed', handleCollaboratorRemoved)
+    }
+  }, [projects])
+
   const getPermissionLabel = (permission) => {
     switch (permission) {
       case 'view': return 'Lecture'

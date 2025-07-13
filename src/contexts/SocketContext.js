@@ -124,6 +124,19 @@ export const SocketProvider = ({ children }) => {
           window.dispatchEvent(new CustomEvent('collaborator_removed', { detail: data }))
         })
 
+        // Écouter les suppressions de projets
+        newSocket.on('project_deleted', (data) => {
+          if (data.deletedBy !== user.id) {
+            toast.error(`🗑️ Le projet "${data.projectName}" a été supprimé par ${data.deletedByName}`)
+          }
+          window.dispatchEvent(new CustomEvent('project_deleted', { detail: data }))
+        })
+
+        // Écouter les créations de projets
+        newSocket.on('project_created', (data) => {
+          window.dispatchEvent(new CustomEvent('project_created', { detail: data }))
+        })
+
         setSocket(newSocket)
 
         return () => {
