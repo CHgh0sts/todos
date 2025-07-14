@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { verifyToken, getTokenFromRequest } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { WebhookService } from '@/lib/webhookService'
 
 // Répondre à une invitation (accepter/refuser)
 export async function PUT(request, { params }) {
@@ -88,6 +89,36 @@ export async function PUT(request, { params }) {
             })
           }
         })
+      })
+
+      // Envoyer les notifications webhook/intégrations pour collaboration.added
+      const webhookData = {
+        collaboration: {
+          projectId: invitation.projectId,
+          userId: userId,
+          permission: invitation.permission,
+          addedAt: new Date()
+        },
+        project: {
+          id: invitation.project.id,
+          name: invitation.project.name,
+          color: invitation.project.color,
+          emoji: invitation.project.emoji
+        },
+        user: {
+          id: invitation.sender.id,
+          name: invitation.sender.name,
+          email: invitation.sender.email
+        },
+        collaborator: {
+          id: userId,
+          name: invitation.receiver?.name || 'Utilisateur',
+          email: invitation.receiver?.email || 'Non disponible'
+        }
+      }
+      
+      WebhookService.sendWebhook('collaboration.added', webhookData, invitation.senderId).catch(error => {
+        console.error('🪝 [Invitations API] Erreur lors de l\'envoi du webhook collaboration.added:', error)
       })
 
       return NextResponse.json({ 
