@@ -29,28 +29,30 @@ model User {
   todos                  Todo[]
   categories             Category[]
   projects               Project[]
-  sharedProjects         ProjectShare[]  @relation("SharedProjects")
-  ownedShares            ProjectShare[]  @relation("ProjectOwner")
-  sentInvitations        Invitation[]    @relation("InvitationSender")
-  receivedInvitations    Invitation[]    @relation("InvitationReceiver")
+  sharedProjects         ProjectShare[]    @relation("SharedProjects")
+  ownedShares            ProjectShare[]    @relation("ProjectOwner")
+  sentInvitations        Invitation[]      @relation("InvitationSender")
+  receivedInvitations    Invitation[]      @relation("InvitationReceiver")
   notifications          Notification[]
   // Relations pour le système d'amis
-  sentFriendRequests     FriendRequest[] @relation("FriendRequestSender")
-  receivedFriendRequests FriendRequest[] @relation("FriendRequestReceiver")
-  friendsAsUser1         Friendship[]    @relation("User1")
-  friendsAsUser2         Friendship[]    @relation("User2")
+  sentFriendRequests     FriendRequest[]   @relation("FriendRequestSender")
+  receivedFriendRequests FriendRequest[]   @relation("FriendRequestReceiver")
+  friendsAsUser1         Friendship[]      @relation("User1")
+  friendsAsUser2         Friendship[]      @relation("User2")
   // Relations pour les liens de partage
-  shareLinks             ShareLink[]     @relation("ShareLinkCreator")
+  shareLinks             ShareLink[]       @relation("ShareLinkCreator")
   // Relations pour les clés API
   apiKeys                ApiKey[]
   apiLogs                ApiLog[]
   // Relations pour l'historique d'activité
-  activityLogs           ActivityLog[]   @relation("UserActivityLogs")
-  targetActivityLogs     ActivityLog[]   @relation("TargetActivityLogs")
+  activityLogs           ActivityLog[]     @relation("UserActivityLogs")
+  targetActivityLogs     ActivityLog[]     @relation("TargetActivityLogs")
   // Relations pour le nouveau système d'activité utilisateur
   userActivities         UserActivity[]
   // Relations pour le chat en direct
   chatSessions           ChatSession[]
+  Webhook                Webhook[]
+  UserIntegration        UserIntegration[]
 }
 
 model Project {
@@ -337,6 +339,44 @@ model ChatMessage {
 
   @@index([sessionId, sentAt])
   @@map("chat_messages")
+}
+
+// Système de webhooks
+model Webhook {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  name      String
+  url       String
+  events    String[] // Liste des événements à surveiller
+  secret    String? // Secret pour signer les requêtes
+  active    Boolean   @default(true)
+  lastUsed  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, active])
+  @@map("webhooks")
+}
+
+// Intégrations utilisateur (Slack, Discord, etc.)
+model UserIntegration {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String // slack, discord, zapier, etc.
+  settings  Json // Configuration spécifique à l'intégration
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@index([userId, type, active])
+  @@map("user_integrations")
 }
 
 enum Role {

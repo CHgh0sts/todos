@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { withApiLogging, getAuthenticatedUser } from '@/lib/apiMiddleware'
 import { logAdd, extractRequestInfo, generateTextLog } from '@/lib/userActivityLogger'
+import { WebhookService } from '@/lib/webhookService'
 
 const prisma = new PrismaClient()
 
@@ -256,6 +257,34 @@ async function postHandler(request) {
       textLog
     ).catch(error => {
       console.error('Erreur lors du tracking de création de todo:', error)
+    })
+
+    // Envoyer les notifications webhook/intégrations
+    const webhookData = {
+      todo: {
+        id: todo.id,
+        title: todo.title,
+        description: todo.description,
+        priority: todo.priority,
+        completed: todo.completed,
+        dueDate: todo.dueDate,
+        createdAt: todo.createdAt
+      },
+      project: {
+        id: todo.project.id,
+        name: todo.project.name,
+        color: todo.project.color,
+        emoji: todo.project.emoji
+      },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email
+      }
+    }
+    
+    WebhookService.sendWebhook('todo.created', webhookData, userId).catch(error => {
+      console.error('🪝 [Todos API] Erreur lors de l\'envoi du webhook:', error)
     })
 
     return NextResponse.json(todo, { status: 201 })

@@ -52,6 +52,7 @@
     "test:realtime": "node scripts/test-project-realtime.js"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@prisma/client": "^6.11.1",
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tailwindcss/typography": "^0.5.16",
@@ -59,6 +60,7 @@
     "dotenv": "^16.5.0",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.525.0",
     "next": "14.0.4",
     "nodemailer": "^7.0.3",
     "react": "^18",

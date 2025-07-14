@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifyToken, getTokenFromRequest } from '@/lib/auth'
 import { logAdd, extractRequestInfo, generateTextLog } from '@/lib/userActivityLogger'
+import { WebhookService } from '@/lib/webhookService'
 
 async function getUserFromRequest(request) {
   const token = getTokenFromRequest(request)
@@ -160,6 +161,41 @@ export async function PUT(request, { params }) {
       textLog
     ).catch(error => {
       console.error('Erreur lors du tracking de modification de todo:', error)
+    })
+
+    // Envoyer les notifications webhook/intégrations
+    const webhookData = {
+      todo: {
+        id: updatedTodo.id,
+        title: updatedTodo.title,
+        description: updatedTodo.description,
+        priority: updatedTodo.priority,
+        completed: updatedTodo.completed,
+        dueDate: updatedTodo.dueDate,
+        updatedAt: updatedTodo.updatedAt
+      },
+      project: {
+        id: updatedTodo.project.id,
+        name: updatedTodo.project.name,
+        color: updatedTodo.project.color,
+        emoji: updatedTodo.project.emoji
+      },
+      user: {
+        id: currentUser ? userId : updatedTodo.user.id,
+        name: currentUser?.name || updatedTodo.user.name,
+        email: updatedTodo.user.email
+      }
+    }
+    
+    // Déterminer le type d'événement : si la tâche vient d'être marquée comme terminée
+    const wasCompleted = originalTodo.completed
+    const isNowCompleted = updatedTodo.completed
+    const justCompleted = !wasCompleted && isNowCompleted
+    
+    const eventType = justCompleted ? 'todo.completed' : 'todo.updated'
+    
+    WebhookService.sendWebhook(eventType, webhookData, userId).catch(error => {
+      console.error(`🪝 [Todos API] Erreur lors de l'envoi du webhook ${eventType}:`, error)
     })
     
     return NextResponse.json(enrichedTodo)

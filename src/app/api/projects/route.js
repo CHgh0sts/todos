@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client'
 import { withApiLogging, getAuthenticatedUser } from '@/lib/apiMiddleware'
 import { logAdd, extractRequestInfo, generateTextLog } from '@/lib/userActivityLogger'
 import { getOptimizedUserProjects, getOptimizedPrisma, invalidateUserCache } from '@/lib/dbOptimization'
+import { WebhookService } from '@/lib/webhookService'
 
 const prisma = new PrismaClient()
 
@@ -204,6 +205,27 @@ async function postHandler(request) {
         }
       })
     }
+
+    // Envoyer les notifications webhook/intégrations
+    const webhookData = {
+      project: {
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        color: project.color,
+        emoji: project.emoji,
+        createdAt: project.createdAt
+      },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email
+      }
+    }
+    
+    WebhookService.sendWebhook('project.created', webhookData, userId).catch(error => {
+      console.error('🪝 [Projects API] Erreur lors de l\'envoi du webhook:', error)
+    })
 
     console.log('✅ [Projects API] Projet créé avec succès:', { projectId: project.id, projectName: project.name })
     

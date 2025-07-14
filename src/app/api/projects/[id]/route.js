@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { verifyToken, getTokenFromRequest } from '@/lib/auth'
 import { logAdd, extractRequestInfo, generateTextLog } from '@/lib/userActivityLogger'
+import { WebhookService } from '@/lib/webhookService'
 
 async function getUserFromRequest(request) {
   const token = getTokenFromRequest(request)
@@ -243,6 +244,27 @@ export async function PUT(request, { params }) {
       // Notifier le propriétaire
       global.io.to(`user_${project.userId}`).emit('project_updated', responseData)
     }
+
+    // Envoyer les notifications webhook/intégrations pour project.updated
+    const webhookData = {
+      project: {
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        color: project.color,
+        emoji: project.emoji,
+        updatedAt: project.updatedAt
+      },
+      user: {
+        id: currentUser ? userId : project.user.id,
+        name: currentUser?.name || project.user.name,
+        email: project.user.email
+      }
+    }
+    
+    WebhookService.sendWebhook('project.updated', webhookData, project.userId).catch(error => {
+      console.error('🪝 [Projects API] Erreur lors de l\'envoi du webhook project.updated:', error)
+    })
     
     return NextResponse.json(responseData)
   } catch (error) {
@@ -379,6 +401,26 @@ export async function DELETE(request, { params }) {
         }
       })
     }
+
+    // Envoyer les notifications webhook/intégrations pour project.deleted
+    const webhookDataDeleted = {
+      project: {
+        id: deletedData.id,
+        name: deletedData.name,
+        description: deletedData.description,
+        color: deletedData.color,
+        emoji: deletedData.emoji
+      },
+      user: {
+        id: userId,
+        name: currentUser?.name || 'Utilisateur',
+        email: currentUser?.email || 'Non disponible'
+      }
+    }
+    
+    WebhookService.sendWebhook('project.deleted', webhookDataDeleted, projectAccess.userId).catch(error => {
+      console.error('🪝 [Projects API] Erreur lors de l\'envoi du webhook project.deleted:', error)
+    })
     
     return NextResponse.json({ message: 'Projet supprimé avec succès' })
   } catch (error) {
