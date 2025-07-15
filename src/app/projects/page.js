@@ -80,29 +80,29 @@ function ProjectsPage() {
 
   const fetchSystemSettings = async () => {
     try {
-      console.log('🔍 [Projects Page] Récupération des paramètres système')
+      console.log('🔍 [Projects Page] Récupération des paramètres système publics')
       
-      const token = Cookies.get('token')
-      if (!token) return
-      
-      const response = await fetch('/api/admin/settings', {
+      const response = await fetch('/api/system-config', {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
         }
       })
       
       if (response.ok) {
         const data = await response.json()
-        if (data.success && data.settings) {
-          setMaxProjectsPerUser(data.settings.maxProjectsPerUser || 10)
-          console.log('✅ [Projects Page] Limite de projets récupérée:', data.settings.maxProjectsPerUser)
+        if (data.success && data.config) {
+          setMaxProjectsPerUser(data.config.maxProjectsPerUser || 10)
+          console.log('✅ [Projects Page] Limite de projets récupérée:', data.config.maxProjectsPerUser)
         }
       } else {
-        console.log('⚠️ [Projects Page] Impossible de récupérer les paramètres système')
+        console.log('⚠️ [Projects Page] Impossible de récupérer les paramètres système, utilisation de la valeur par défaut')
+        setMaxProjectsPerUser(10)
       }
     } catch (error) {
       console.error('❌ [Projects Page] Erreur lors de la récupération des paramètres:', error)
+      // En cas d'erreur, utiliser la valeur par défaut
+      setMaxProjectsPerUser(10)
     }
   }
 
@@ -148,17 +148,29 @@ function ProjectsPage() {
         })
         
         if (response.status === 401) {
-          console.log('🔄 [Projects Page] Token expiré, tentative de rafraîchissement')
-          // Attendre un peu avant de rediriger pour éviter les redirections en boucle
-          setTimeout(() => {
+          console.log('🔄 [Projects Page] Token expiré ou invalide')
+          // Vérifier si c'est vraiment un problème de token ou une erreur temporaire
+          const token = Cookies.get('token')
+          if (!token) {
+            console.log('❌ [Projects Page] Aucun token trouvé, redirection vers login')
             toast.error('Session expirée, veuillez vous reconnecter')
             router.push('/auth/login')
-          }, 1000)
+          } else {
+            console.log('⚠️ [Projects Page] Token présent mais refusé par le serveur')
+            // Attendre un peu avant de rediriger pour éviter les redirections en boucle
+            setTimeout(() => {
+              toast.error('Session expirée, veuillez vous reconnecter')
+              router.push('/auth/login')
+            }, 2000)
+          }
         } else if (response.status === 500) {
+          console.log('🔥 [Projects Page] Erreur serveur 500')
           toast.error(`Erreur serveur: ${errorData.error || 'Erreur interne'}`)
         } else if (response.status === 503) {
+          console.log('🚫 [Projects Page] Service indisponible 503')
           toast.error('Service temporairement indisponible, veuillez réessayer')
         } else {
+          console.log(`⚠️ [Projects Page] Erreur ${response.status}:`, errorData)
           toast.error(`Erreur lors du chargement des projets: ${errorData.error || 'Erreur inconnue'}`)
         }
       }
@@ -170,8 +182,13 @@ function ProjectsPage() {
       })
       
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        console.log('🌐 [Projects Page] Erreur réseau détectée')
         toast.error('Erreur de connexion au serveur, vérifiez votre connexion')
+      } else if (error.name === 'AbortError') {
+        console.log('⏹️ [Projects Page] Requête annulée')
+        toast.error('Requête annulée')
       } else {
+        console.log('⚠️ [Projects Page] Erreur inconnue:', error.name)
         toast.error('Erreur lors du chargement des projets')
       }
     } finally {
