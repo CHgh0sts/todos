@@ -19,6 +19,8 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [isClient, setIsClient] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+  const [hasTemporaryError, setHasTemporaryError] = useState(false)
 
   useEffect(() => {
     // Marquer que nous sommes côté client
@@ -92,6 +94,8 @@ export function AuthProvider({ children }) {
           role: userData.role
         })
         setUser(userData)
+        setRetryCount(0) // Réinitialiser le compteur de retry en cas de succès
+        setHasTemporaryError(false) // Plus d'erreur temporaire
         
         // Synchroniser le thème utilisateur avec le contexte
         if (userData.theme && userData.theme !== 'system') {
@@ -119,7 +123,25 @@ export function AuthProvider({ children }) {
       } else {
         // Autres erreurs (500, 503, etc.) - ne pas supprimer le token
         console.error('❌ [AuthContext] Erreur serveur lors de la vérification:', response.status)
-        // Garder l'utilisateur connecté en cas d'erreur serveur temporaire
+        setHasTemporaryError(true) // Marquer qu'il y a une erreur temporaire
+        
+        // Si on a déjà des données utilisateur (rechargement/navigation), les conserver
+        if (user) {
+          console.log('💾 [AuthContext] Conservation des données utilisateur existantes')
+        } else if (retryCount < 2) {
+          // Si c'est le premier chargement et qu'on a une erreur serveur, 
+          // tenter un retry après un délai (max 2 tentatives)
+          console.log(`🔄 [AuthContext] Erreur serveur au premier chargement, retry ${retryCount + 1}/2 dans 2s`)
+          setRetryCount(prev => prev + 1)
+          setTimeout(() => {
+            if (!user && Cookies.get('token') && retryCount < 2) {
+              console.log('🔄 [AuthContext] Retry de vérification après erreur serveur')
+              checkAuth()
+            }
+          }, 2000)
+        } else {
+          console.log('❌ [AuthContext] Limite de retry atteinte, abandon')
+        }
       }
     } catch (error) {
       console.error('❌ [AuthContext] Erreur lors de la vérification de l\'authentification:', error)
@@ -127,9 +149,27 @@ export function AuthProvider({ children }) {
       // Distinguer les erreurs réseau des autres erreurs
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         console.log('🌐 [AuthContext] Erreur réseau détectée, conservation du token')
-        // Ne pas supprimer le token en cas d'erreur réseau
+        setHasTemporaryError(true) // Marquer qu'il y a une erreur temporaire
+        
+        // Si on a déjà des données utilisateur, les conserver
+        if (user) {
+          console.log('💾 [AuthContext] Conservation des données utilisateur existantes (erreur réseau)')
+        } else if (retryCount < 2) {
+          // Premier chargement avec erreur réseau, tenter un retry (max 2 tentatives)
+          console.log(`🔄 [AuthContext] Erreur réseau au premier chargement, retry ${retryCount + 1}/2 dans 3s`)
+          setRetryCount(prev => prev + 1)
+          setTimeout(() => {
+            if (!user && Cookies.get('token') && retryCount < 2) {
+              console.log('🔄 [AuthContext] Retry après erreur réseau')
+              checkAuth()
+            }
+          }, 3000)
+        } else {
+          console.log('❌ [AuthContext] Limite de retry réseau atteinte, abandon')
+        }
       } else {
         console.log('⚠️ [AuthContext] Erreur non-réseau, investigation nécessaire')
+        // Pour les autres erreurs, ne pas faire de retry automatique
       }
     } finally {
       console.log('✅ [AuthContext] Fin de checkAuth')
@@ -272,6 +312,7 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     loading,
+    hasTemporaryError,
     login,
     register,
     logout,

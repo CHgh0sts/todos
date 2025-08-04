@@ -12,7 +12,7 @@ import UserAvatar from '@/components/UserAvatar'
 import { withMaintenanceCheck } from '@/lib/withMaintenanceCheck'
 
 function ProjectsPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, hasTemporaryError } = useAuth()
   const router = useRouter()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -60,6 +60,12 @@ function ProjectsPage() {
     }
     
     if (!user) {
+      // Si il y a une erreur temporaire, ne pas rediriger tout de suite
+      if (hasTemporaryError) {
+        console.log('⚠️ [Projects Page] Utilisateur non chargé mais erreur temporaire détectée, attente...')
+        return
+      }
+      
       console.log('❌ [Projects Page] Utilisateur non connecté, redirection vers login')
       router.push('/auth/login')
       return
@@ -68,7 +74,7 @@ function ProjectsPage() {
     console.log('✅ [Projects Page] Utilisateur connecté, récupération des projets')
     fetchProjects()
     fetchSystemSettings()
-  }, [user, authLoading, router])
+  }, [user, authLoading, hasTemporaryError, router])
 
   const getAuthHeaders = () => {
     const token = Cookies.get('token')

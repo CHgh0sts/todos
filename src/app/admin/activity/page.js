@@ -8,7 +8,7 @@ import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
 
 export default function AdminActivity() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, hasTemporaryError } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [filterLoading, setFilterLoading] = useState(false)
@@ -40,6 +40,12 @@ export default function AdminActivity() {
     console.log('🔍 [Admin Activity] useEffect auth - authLoading:', authLoading, 'user:', user?.name)
     if (!authLoading) {
       if (!user) {
+        // Si il y a une erreur temporaire, ne pas rediriger tout de suite
+        if (hasTemporaryError) {
+          console.log('⚠️ [Admin Activity] Utilisateur non chargé mais erreur temporaire détectée, attente...')
+          return
+        }
+        
         console.log('❌ [Admin Activity] Pas d\'utilisateur, redirection vers login')
         router.push('/auth/login')
         return
@@ -58,7 +64,7 @@ export default function AdminActivity() {
         setLoading(false)
       })
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, hasTemporaryError, router])
 
   useEffect(() => {
     console.log('🔍 [Admin Activity] useEffect filters - user:', user?.name, 'role:', user?.role)

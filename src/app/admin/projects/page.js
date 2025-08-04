@@ -8,7 +8,7 @@ import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
 
 export default function AdminProjects() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, hasTemporaryError } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [projects, setProjects] = useState([])
@@ -30,6 +30,12 @@ export default function AdminProjects() {
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
+        // Si il y a une erreur temporaire, ne pas rediriger tout de suite
+        if (hasTemporaryError) {
+          console.log('⚠️ [Admin Projects] Utilisateur non chargé mais erreur temporaire détectée, attente...')
+          return
+        }
+        
         router.push('/auth/login')
         return
       }
@@ -42,7 +48,7 @@ export default function AdminProjects() {
       
       fetchProjects()
     }
-  }, [user, authLoading, router, filters])
+  }, [user, authLoading, hasTemporaryError, router, filters])
 
   const getAuthHeaders = () => {
     const token = Cookies.get('token')

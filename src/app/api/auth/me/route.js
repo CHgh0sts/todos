@@ -38,7 +38,16 @@ async function getHandler(request) {
     return NextResponse.json(user)
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'utilisateur:', error)
-    return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
+    
+    // Distinguer les erreurs de JWT des erreurs serveur
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      console.error('❌ [Auth Me API] Token JWT invalide ou expiré:', error.message)
+      return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
+    }
+    
+    // Si c'est une erreur de base de données ou autre erreur serveur
+    console.error('❌ [Auth Me API] Erreur serveur:', error.message)
+    return NextResponse.json({ error: 'Erreur serveur temporaire' }, { status: 500 })
   }
 }
 
