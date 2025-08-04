@@ -140,7 +140,34 @@ export function AuthProvider({ children }) {
             }
           }, 2000)
         } else {
-          console.log('❌ [AuthContext] Limite de retry atteinte, abandon')
+          console.log('❌ [AuthContext] Limite de retry atteinte pour erreur serveur')
+          // Même après échec des retry, si on a un token, on considère l'utilisateur comme potentiellement connecté
+          // On peut créer un utilisateur "minimal" basé sur le token si possible
+          const token = Cookies.get('token')
+          if (token) {
+            try {
+              // Essayer de décoder le token localement pour récupérer des infos basiques
+              const base64Url = token.split('.')[1]
+              const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+              const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+              }).join(''))
+              
+              const decoded = JSON.parse(jsonPayload)
+              console.log('💾 [AuthContext] Création utilisateur minimal depuis token local')
+              
+              // Créer un utilisateur minimal pour éviter la déconnexion
+              setUser({
+                id: decoded.userId,
+                name: 'Utilisateur', // Nom par défaut
+                email: decoded.email || 'email@inconnu.com',
+                role: 'USER', // Rôle par défaut
+                isTemporary: true // Flag pour indiquer que c'est temporaire
+              })
+            } catch (tokenError) {
+              console.error('❌ [AuthContext] Impossible de décoder le token local:', tokenError)
+            }
+          }
         }
       }
     } catch (error) {
@@ -165,7 +192,33 @@ export function AuthProvider({ children }) {
             }
           }, 3000)
         } else {
-          console.log('❌ [AuthContext] Limite de retry réseau atteinte, abandon')
+          console.log('❌ [AuthContext] Limite de retry réseau atteinte')
+          // Même après échec des retry réseau, essayer de créer un utilisateur minimal depuis le token
+          const token = Cookies.get('token')
+          if (token) {
+            try {
+              // Essayer de décoder le token localement pour récupérer des infos basiques
+              const base64Url = token.split('.')[1]
+              const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+              const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+              }).join(''))
+              
+              const decoded = JSON.parse(jsonPayload)
+              console.log('💾 [AuthContext] Création utilisateur minimal après erreur réseau')
+              
+              // Créer un utilisateur minimal pour éviter la déconnexion
+              setUser({
+                id: decoded.userId,
+                name: 'Utilisateur', // Nom par défaut
+                email: decoded.email || 'email@inconnu.com',
+                role: 'USER', // Rôle par défaut
+                isTemporary: true // Flag pour indiquer que c'est temporaire
+              })
+            } catch (tokenError) {
+              console.error('❌ [AuthContext] Impossible de décoder le token local après erreur réseau:', tokenError)
+            }
+          }
         }
       } else {
         console.log('⚠️ [AuthContext] Erreur non-réseau, investigation nécessaire')
@@ -306,6 +359,15 @@ export function AuthProvider({ children }) {
 
   const refreshUser = async () => {
     console.log('🔍 [AuthContext] Rafraîchissement des données utilisateur')
+    // Réinitialiser le compteur de retry pour permettre une nouvelle tentative
+    setRetryCount(0)
+    await checkAuth()
+  }
+
+  const retryConnection = async () => {
+    console.log('🔄 [AuthContext] Retry manuel de la connexion')
+    setRetryCount(0) // Réinitialiser le compteur
+    setHasTemporaryError(false) // Réinitialiser le flag d'erreur
     await checkAuth()
   }
 
@@ -317,7 +379,8 @@ export function AuthProvider({ children }) {
     register,
     logout,
     checkAuth,
-    refreshUser
+    refreshUser,
+    retryConnection
   }
 
   return (

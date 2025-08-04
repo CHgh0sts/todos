@@ -8,7 +8,7 @@ import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
 
 export default function AdminActivity() {
-  const { user, loading: authLoading, hasTemporaryError } = useAuth()
+  const { user, loading: authLoading, hasTemporaryError, retryConnection } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [filterLoading, setFilterLoading] = useState(false)
@@ -444,6 +444,36 @@ export default function AdminActivity() {
     <div className="fixed inset-0 top-16 overflow-y-auto">
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          
+          {/* Alerte de connexion temporaire */}
+          {(hasTemporaryError || user?.isTemporary) && (
+            <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                      {user?.isTemporary ? 'Mode hors ligne' : 'Problème de connexion temporaire'}
+                    </p>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      {user?.isTemporary 
+                        ? 'Connecté en mode hors ligne. Certaines données peuvent ne pas être à jour.'
+                        : 'Certaines fonctionnalités peuvent être limitées. Retry en cours automatiquement...'
+                      }
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={retryConnection}
+                  className="ml-4 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 px-3 py-1 rounded text-sm font-medium hover:bg-yellow-200 dark:hover:bg-yellow-700 transition-colors"
+                >
+                  {user?.isTemporary ? 'Reconnecter' : 'Réessayer'}
+                </button>
+              </div>
+            </div>
+          )}
           
           {/* Header */}
           <div className="mb-8">
