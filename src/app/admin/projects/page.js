@@ -71,11 +71,31 @@ export default function AdminProjects() {
         setPagination(data.pagination)
         setStats(data.stats)
       } else {
-        toast.error('Erreur lors du chargement des projets')
+        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        
+        if (response.status === 401) {
+          toast.error('Session expirée, veuillez vous reconnecter')
+          router.push('/auth/login')
+        } else if (response.status === 403) {
+          toast.error('Accès refusé. Permissions insuffisantes.')
+          router.push('/')
+        } else if (response.status === 500) {
+          toast.error(`Erreur serveur: ${errorData.error || 'Erreur interne du serveur'}`)
+        } else if (response.status === 503) {
+          toast.error('Service temporairement indisponible, veuillez réessayer dans quelques instants')
+        } else {
+          toast.error(`Erreur lors du chargement des projets (${response.status}): ${errorData.error || 'Erreur inconnue'}`)
+        }
       }
     } catch (error) {
       console.error('Erreur:', error)
-      toast.error('Erreur lors du chargement des projets')
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        toast.error('Erreur de connexion au serveur, vérifiez votre connexion internet')
+      } else if (error.name === 'AbortError') {
+        toast.error('Requête annulée')
+      } else {
+        toast.error('Erreur lors du chargement des projets')
+      }
     } finally {
       setLoading(false)
     }
@@ -94,12 +114,31 @@ export default function AdminProjects() {
         setShowDeleteModal(false)
         setProjectToDelete(null)
       } else {
-        const data = await response.json()
-        toast.error(data.error || 'Erreur lors de la suppression')
+        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        
+        if (response.status === 401) {
+          toast.error('Session expirée, veuillez vous reconnecter')
+          router.push('/auth/login')
+        } else if (response.status === 403) {
+          toast.error(errorData.error || 'Permissions insuffisantes pour supprimer ce projet')
+        } else if (response.status === 404) {
+          toast.error('Projet non trouvé')
+          fetchProjects() // Rafraîchir la liste
+          setShowDeleteModal(false)
+          setProjectToDelete(null)
+        } else if (response.status === 500) {
+          toast.error('Erreur serveur lors de la suppression du projet')
+        } else {
+          toast.error(errorData.error || 'Erreur lors de la suppression du projet')
+        }
       }
     } catch (error) {
       console.error('Erreur:', error)
-      toast.error('Erreur lors de la suppression')
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        toast.error('Erreur de connexion au serveur')
+      } else {
+        toast.error('Erreur lors de la suppression du projet')
+      }
     }
   }
 
@@ -127,12 +166,29 @@ export default function AdminProjects() {
         const data = await response.json()
         setProjectTodos(data.todos || [])
       } else {
-        toast.error('Erreur lors du chargement des tâches')
+        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        
+        if (response.status === 401) {
+          toast.error('Session expirée, veuillez vous reconnecter')
+          router.push('/auth/login')
+        } else if (response.status === 403) {
+          toast.error('Accès refusé pour voir les tâches de ce projet')
+        } else if (response.status === 404) {
+          toast.error('Projet non trouvé')
+        } else if (response.status === 500) {
+          toast.error('Erreur serveur lors du chargement des tâches')
+        } else {
+          toast.error(`Erreur lors du chargement des tâches: ${errorData.error || 'Erreur inconnue'}`)
+        }
         setProjectTodos([])
       }
     } catch (error) {
       console.error('Erreur:', error)
-      toast.error('Erreur lors du chargement des tâches')
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        toast.error('Erreur de connexion au serveur')
+      } else {
+        toast.error('Erreur lors du chargement des tâches')
+      }
       setProjectTodos([])
     } finally {
       setLoadingTodos(false)

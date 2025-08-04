@@ -148,8 +148,7 @@ function ProjectsPage() {
         })
         
         if (response.status === 401) {
-          console.log('🔄 [Projects Page] Token expiré ou invalide')
-          // Vérifier si c'est vraiment un problème de token ou une erreur temporaire
+          console.log('🔄 [Projects Page] Erreur 401 reçue')
           const token = Cookies.get('token')
           if (!token) {
             console.log('❌ [Projects Page] Aucun token trouvé, redirection vers login')
@@ -157,11 +156,45 @@ function ProjectsPage() {
             router.push('/auth/login')
           } else {
             console.log('⚠️ [Projects Page] Token présent mais refusé par le serveur')
-            // Attendre un peu avant de rediriger pour éviter les redirections en boucle
-            setTimeout(() => {
-              toast.error('Session expirée, veuillez vous reconnecter')
-              router.push('/auth/login')
-            }, 2000)
+            // Tentative de retry avant de rediriger (peut être une erreur temporaire)
+            let retryCount = 0
+            const maxRetries = 2
+            
+            const retryFetch = async () => {
+              retryCount++
+              console.log(`🔄 [Projects Page] Tentative ${retryCount}/${maxRetries}`)
+              
+              try {
+                const retryResponse = await fetch(`/api/projects`, {
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                  }
+                })
+                
+                if (retryResponse.ok) {
+                  const retryData = await retryResponse.json()
+                  console.log('✅ [Projects Page] Retry réussi, projets récupérés')
+                  setProjects(retryData)
+                  return
+                } else if (retryResponse.status === 401 && retryCount >= maxRetries) {
+                  console.log('❌ [Projects Page] Toutes les tentatives ont échoué, redirection')
+                  toast.error('Session expirée, veuillez vous reconnecter')
+                  router.push('/auth/login')
+                }
+              } catch (retryError) {
+                console.error(`❌ [Projects Page] Erreur retry ${retryCount}:`, retryError)
+                if (retryCount >= maxRetries) {
+                  toast.error('Problème de connexion persistant, veuillez vous reconnecter')
+                  router.push('/auth/login')
+                }
+              }
+            }
+            
+            // Attendre un peu puis tenter le retry
+            setTimeout(retryFetch, 1000)
           }
         } else if (response.status === 500) {
           console.log('🔥 [Projects Page] Erreur serveur 500')
@@ -532,7 +565,7 @@ function ProjectsPage() {
                     
                     {project.sharedWith && project.sharedWith.length > 0 && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-                        <svg className="w-3 h-3 mr-1 flex-shrink-0 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         {project.sharedWith.length}

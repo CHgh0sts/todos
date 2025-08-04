@@ -140,12 +140,36 @@ export default function AdminActivity() {
         setPagination(data.pagination)
         setStats(data.stats)
       } else {
-        console.error('❌ [Admin Activity] Erreur API:', response.status)
-        toast.error('Erreur lors du chargement des logs')
+        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        
+        if (response.status === 401) {
+          console.error('❌ [Admin Activity] Session expirée')
+          toast.error('Session expirée, veuillez vous reconnecter')
+          router.push('/auth/login')
+        } else if (response.status === 403) {
+          console.error('❌ [Admin Activity] Accès refusé')
+          toast.error('Accès refusé. Permissions insuffisantes.')
+          router.push('/')
+        } else if (response.status === 500) {
+          console.error('❌ [Admin Activity] Erreur serveur 500')
+          toast.error(`Erreur serveur: ${errorData.error || 'Erreur interne du serveur'}`)
+        } else if (response.status === 503) {
+          console.error('❌ [Admin Activity] Service indisponible 503')
+          toast.error('Service temporairement indisponible, veuillez réessayer dans quelques instants')
+        } else {
+          console.error('❌ [Admin Activity] Erreur API:', response.status, errorData)
+          toast.error(`Erreur lors du chargement des logs (${response.status}): ${errorData.error || 'Erreur inconnue'}`)
+        }
       }
     } catch (error) {
       console.error('❌ [Admin Activity] Erreur fetchLogs:', error)
-      toast.error('Erreur lors du chargement des logs')
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        toast.error('Erreur de connexion au serveur, vérifiez votre connexion internet')
+      } else if (error.name === 'AbortError') {
+        toast.error('Requête annulée')
+      } else {
+        toast.error('Erreur lors du chargement des logs d\'activité')
+      }
     } finally {
       console.log('🔍 [Admin Activity] Fin fetchLogs')
       setFilterLoading(false)
@@ -164,10 +188,30 @@ export default function AdminActivity() {
         console.log('✅ [Admin Activity] Utilisateurs chargés:', data.users?.length)
         setUsers(data.users || [])
       } else {
-        console.error('❌ [Admin Activity] Erreur chargement utilisateurs:', response.status)
+        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        
+        if (response.status === 401) {
+          console.error('❌ [Admin Activity] Session expirée lors du chargement des utilisateurs')
+          toast.error('Session expirée, veuillez vous reconnecter')
+          router.push('/auth/login')
+        } else if (response.status === 403) {
+          console.error('❌ [Admin Activity] Accès refusé pour les utilisateurs')
+          toast.error('Accès refusé pour charger la liste des utilisateurs')
+        } else if (response.status === 500) {
+          console.error('❌ [Admin Activity] Erreur serveur lors du chargement des utilisateurs')
+          toast.error('Erreur serveur lors du chargement de la liste des utilisateurs')
+        } else {
+          console.error('❌ [Admin Activity] Erreur chargement utilisateurs:', response.status, errorData)
+          toast.error(`Erreur lors du chargement des utilisateurs: ${errorData.error || 'Erreur inconnue'}`)
+        }
       }
     } catch (error) {
       console.error('❌ [Admin Activity] Erreur fetchUsers:', error)
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        toast.error('Erreur de connexion lors du chargement des utilisateurs')
+      } else {
+        toast.error('Erreur lors du chargement de la liste des utilisateurs')
+      }
     }
   }
 

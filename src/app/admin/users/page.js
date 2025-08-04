@@ -69,11 +69,31 @@ export default function AdminUsers() {
         setPagination(data.pagination)
         setStats(data.stats)
       } else {
-        toast.error('Erreur lors du chargement des utilisateurs')
+        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        
+        if (response.status === 401) {
+          toast.error('Session expirée, veuillez vous reconnecter')
+          router.push('/auth/login')
+        } else if (response.status === 403) {
+          toast.error('Accès refusé. Permissions insuffisantes.')
+          router.push('/')
+        } else if (response.status === 500) {
+          toast.error(`Erreur serveur: ${errorData.error || 'Erreur interne du serveur'}`)
+        } else if (response.status === 503) {
+          toast.error('Service temporairement indisponible, veuillez réessayer dans quelques instants')
+        } else {
+          toast.error(`Erreur lors du chargement des utilisateurs (${response.status}): ${errorData.error || 'Erreur inconnue'}`)
+        }
       }
     } catch (error) {
       console.error('Erreur:', error)
-      toast.error('Erreur lors du chargement des utilisateurs')
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        toast.error('Erreur de connexion au serveur, vérifiez votre connexion internet')
+      } else if (error.name === 'AbortError') {
+        toast.error('Requête annulée')
+      } else {
+        toast.error('Erreur lors du chargement des utilisateurs')
+      }
     } finally {
       setLoading(false)
     }
@@ -91,12 +111,29 @@ export default function AdminUsers() {
         toast.success('Rôle mis à jour avec succès')
         fetchUsers()
       } else {
-        const data = await response.json()
-        toast.error(data.error || 'Erreur lors de la mise à jour')
+        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        
+        if (response.status === 401) {
+          toast.error('Session expirée, veuillez vous reconnecter')
+          router.push('/auth/login')
+        } else if (response.status === 403) {
+          toast.error(errorData.error || 'Permissions insuffisantes pour cette action')
+        } else if (response.status === 404) {
+          toast.error('Utilisateur non trouvé')
+          fetchUsers() // Rafraîchir la liste
+        } else if (response.status === 500) {
+          toast.error('Erreur serveur lors de la mise à jour du rôle')
+        } else {
+          toast.error(errorData.error || 'Erreur lors de la mise à jour du rôle')
+        }
       }
     } catch (error) {
       console.error('Erreur:', error)
-      toast.error('Erreur lors de la mise à jour')
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        toast.error('Erreur de connexion au serveur')
+      } else {
+        toast.error('Erreur lors de la mise à jour du rôle')
+      }
     }
   }
 
@@ -113,12 +150,31 @@ export default function AdminUsers() {
         setShowDeleteModal(false)
         setUserToDelete(null)
       } else {
-        const data = await response.json()
-        toast.error(data.error || 'Erreur lors de la suppression')
+        const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        
+        if (response.status === 401) {
+          toast.error('Session expirée, veuillez vous reconnecter')
+          router.push('/auth/login')
+        } else if (response.status === 403) {
+          toast.error(errorData.error || 'Permissions insuffisantes pour supprimer cet utilisateur')
+        } else if (response.status === 404) {
+          toast.error('Utilisateur non trouvé')
+          fetchUsers() // Rafraîchir la liste
+          setShowDeleteModal(false)
+          setUserToDelete(null)
+        } else if (response.status === 500) {
+          toast.error('Erreur serveur lors de la suppression')
+        } else {
+          toast.error(errorData.error || 'Erreur lors de la suppression de l\'utilisateur')
+        }
       }
     } catch (error) {
       console.error('Erreur:', error)
-      toast.error('Erreur lors de la suppression')
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        toast.error('Erreur de connexion au serveur')
+      } else {
+        toast.error('Erreur lors de la suppression de l\'utilisateur')
+      }
     }
   }
 
