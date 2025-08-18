@@ -59,6 +59,12 @@ export default function ProjectTodosPage() {
   const [editTodoDueDate, setEditTodoDueDate] = useState('')
   const [editTodoCategoryId, setEditTodoCategoryId] = useState('')
 
+  // États pour les commentaires
+  const [expandedComments, setExpandedComments] = useState(new Set())
+  const [newComment, setNewComment] = useState({})
+  const [editingComment, setEditingComment] = useState(null)
+  const [editCommentContent, setEditCommentContent] = useState('')
+
   // Couleurs prédéfinies
   const colors = [
     '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
@@ -445,6 +451,135 @@ export default function ProjectTodosPage() {
     } catch (error) {
       console.error('Erreur lors de la mise à jour du projet:', error)
       toast.error('Erreur lors de la mise à jour du projet')
+    }
+  }
+
+  // Fonctions pour les commentaires
+  const toggleComments = (todoId) => {
+    setExpandedComments(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(todoId)) {
+        newSet.delete(todoId)
+      } else {
+        newSet.add(todoId)
+      }
+      return newSet
+    })
+  }
+
+  const addComment = async (todoId) => {
+    const content = newComment[todoId]
+    if (!content || !content.trim()) return
+
+    try {
+      const response = await fetch('/api/comments', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          todoId: parseInt(todoId),
+          content: content.trim()
+        })
+      })
+
+      if (response.ok) {
+        const comment = await response.json()
+        // Mettre à jour la todo avec le nouveau commentaire
+        setTodos(prevTodos => 
+          prevTodos.map(todo => 
+            todo.id === todoId 
+              ? { ...todo, Commentaire: [...(todo.Commentaire || []), comment] }
+              : todo
+          )
+        )
+        // Effacer le champ de saisie
+        setNewComment(prev => ({ ...prev, [todoId]: '' }))
+        toast.success('Commentaire ajouté !')
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Erreur lors de l\'ajout du commentaire')
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du commentaire:', error)
+      toast.error('Erreur lors de l\'ajout du commentaire')
+    }
+  }
+
+  const deleteComment = async (commentId, todoId) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce commentaire ?')) return
+
+    try {
+      const response = await fetch(`/api/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      })
+
+      if (response.ok) {
+        // Mettre à jour la todo en supprimant le commentaire
+        setTodos(prevTodos => 
+          prevTodos.map(todo => 
+            todo.id === todoId 
+              ? { ...todo, Commentaire: (todo.Commentaire || []).filter(c => c.id !== commentId) }
+              : todo
+          )
+        )
+        toast.success('Commentaire supprimé !')
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Erreur lors de la suppression du commentaire')
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression du commentaire:', error)
+      toast.error('Erreur lors de la suppression du commentaire')
+    }
+  }
+
+  const startEditComment = (comment) => {
+    setEditingComment(comment.id)
+    setEditCommentContent(comment.content)
+  }
+
+  const cancelEditComment = () => {
+    setEditingComment(null)
+    setEditCommentContent('')
+  }
+
+  const updateComment = async (commentId, todoId) => {
+    if (!editCommentContent.trim()) return
+
+    try {
+      const response = await fetch(`/api/comments/${commentId}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          content: editCommentContent.trim()
+        })
+      })
+
+      if (response.ok) {
+        const updatedComment = await response.json()
+        // Mettre à jour la todo avec le commentaire modifié
+        setTodos(prevTodos => 
+          prevTodos.map(todo => 
+            todo.id === todoId 
+              ? { 
+                  ...todo, 
+                  Commentaire: (todo.Commentaire || []).map(c => 
+                    c.id === commentId ? updatedComment : c
+                  ) 
+                }
+              : todo
+          )
+        )
+        setEditingComment(null)
+        setEditCommentContent('')
+        toast.success('Commentaire mis à jour !')
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Erreur lors de la mise à jour du commentaire')
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du commentaire:', error)
+      toast.error('Erreur lors de la mise à jour du commentaire')
     }
   }
 
@@ -1042,6 +1177,22 @@ export default function ProjectTodosPage() {
                     </div>
                     
                     <div className="flex items-center space-x-2 ml-2 flex-shrink-0">
+                      {/* Bouton commentaires */}
+                      <button
+                        onClick={() => toggleComments(todo.id)}
+                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 p-1 relative"
+                        title="Afficher/Masquer les commentaires"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        {todo.Commentaire && todo.Commentaire.length > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                            {todo.Commentaire.length}
+                          </span>
+                        )}
+                      </button>
+
                       {/* Bouton d'édition selon les permissions */}
                       {todo.canEdit && (
                         <button
@@ -1071,6 +1222,143 @@ export default function ProjectTodosPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Section des commentaires */}
+              {expandedComments.has(todo.id) && (
+                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
+                      <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      Commentaires ({todo.Commentaire?.length || 0})
+                    </h4>
+
+                    {/* Liste des commentaires */}
+                    {todo.Commentaire && todo.Commentaire.length > 0 ? (
+                      <div className="space-y-3 max-h-60 overflow-y-auto">
+                        {todo.Commentaire.map((comment) => (
+                          <div key={comment.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                                  {comment.user.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {comment.user.name}
+                                  </span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                                    {new Date(comment.createdAt).toLocaleDateString('fr-FR', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Boutons d'actions sur le commentaire */}
+                              {(comment.user.id === user?.id || 
+                                project.isOwner || 
+                                ['ADMIN', 'MODERATOR'].includes(user?.role) ||
+                                project.permission === 'admin' ||
+                                project.permission === 'super_admin' ||
+                                project.permission === 'moderator') && (
+                                <div className="flex items-center space-x-1">
+                                  {comment.user.id === user?.id && (
+                                    <button
+                                      onClick={() => startEditComment(comment)}
+                                      className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1"
+                                      title="Modifier ce commentaire"
+                                    >
+                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                      </svg>
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => deleteComment(comment.id, todo.id)}
+                                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"
+                                    title="Supprimer ce commentaire"
+                                  >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Contenu du commentaire */}
+                            {editingComment === comment.id ? (
+                              <div className="space-y-2">
+                                <textarea
+                                  value={editCommentContent}
+                                  onChange={(e) => setEditCommentContent(e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                  rows={2}
+                                  placeholder="Modifier votre commentaire..."
+                                />
+                                <div className="flex items-center space-x-2">
+                                  <button
+                                    onClick={() => updateComment(comment.id, todo.id)}
+                                    className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors"
+                                  >
+                                    Sauvegarder
+                                  </button>
+                                  <button
+                                    onClick={cancelEditComment}
+                                    className="bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1 rounded text-xs hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                                  >
+                                    Annuler
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                                {comment.content}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                        Aucun commentaire pour cette tâche
+                      </p>
+                    )}
+
+                    {/* Formulaire d'ajout de commentaire */}
+                    {canAddTodos && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-600">
+                        <div className="flex space-x-2">
+                          <textarea
+                            value={newComment[todo.id] || ''}
+                            onChange={(e) => setNewComment(prev => ({
+                              ...prev,
+                              [todo.id]: e.target.value
+                            }))}
+                            placeholder="Ajouter un commentaire..."
+                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                            rows={2}
+                          />
+                          <button
+                            onClick={() => addComment(todo.id)}
+                            disabled={!newComment[todo.id]?.trim()}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))
         )}

@@ -106,6 +106,21 @@ async function getHandler(request) {
             name: true,
             email: true
           }
+        },
+        Commentaire: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                profileImage: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
         }
       },
       orderBy: [
