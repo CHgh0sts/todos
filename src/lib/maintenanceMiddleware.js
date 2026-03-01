@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
-
-const prisma = new PrismaClient()
 
 // Cache pour éviter de requêter la DB à chaque requête
 let maintenanceCache = {
@@ -63,8 +61,6 @@ export async function checkMaintenanceMode() {
       isEnabled: maintenanceCache.isEnabled,
       message: maintenanceCache.message
     }
-  } finally {
-    await prisma.$disconnect()
   }
 }
 

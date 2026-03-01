@@ -16,12 +16,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Le mot de passe doit contenir au moins 6 caractères' }, { status: 400 })
     }
 
-    // Vérifier si les inscriptions sont activées
+    // Vérifier si les inscriptions sont activées (activées par défaut si le réglage n'existe pas)
     const registrationSetting = await prisma.systemSettings.findUnique({
       where: { key: 'registrationEnabled' }
     })
 
-    const registrationEnabled = registrationSetting?.value === 'true'
+    const registrationEnabled = registrationSetting?.value !== 'false'
     if (!registrationEnabled) {
       return NextResponse.json(
         { error: 'Les inscriptions sont actuellement désactivées. Veuillez réessayer plus tard.' },
@@ -119,8 +119,19 @@ export async function POST(request) {
     
   } catch (error) {
     console.error('Erreur lors de l\'inscription:', error)
+
+    // Message plus explicite en dev ou pour certaines erreurs connues
+    let message = 'Erreur lors de la création du compte'
+    if (process.env.NODE_ENV === 'development' && error?.message) {
+      message = error.message
+    } else if (error?.code === 'P2002') {
+      message = 'Un compte existe déjà avec cet email'
+    } else if (error?.code === 'P2025' || error?.meta?.cause) {
+      message = 'Données invalides. Vérifiez votre saisie.'
+    }
+
     return NextResponse.json(
-      { error: 'Erreur lors de la création du compte' },
+      { error: message },
       { status: 500 }
     )
   }

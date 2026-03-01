@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
-import { PrismaClient } from '@prisma/client'
 import { getApiStats } from '@/lib/apiLogger'
 import { withApiLogging } from '@/lib/apiMiddleware'
-
-const prisma = new PrismaClient()
+import prisma from '@/lib/prisma'
+import { verifyToken } from '@/lib/auth'
 
 async function handler(request) {
   try {
@@ -14,7 +12,12 @@ async function handler(request) {
     }
 
     const token = authHeader.substring(7)
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const decoded = verifyToken(token)
+
+    if (!decoded?.userId) {
+      return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
+    }
+
     const userId = decoded.userId
 
     // Récupérer l'utilisateur avec sa clé API

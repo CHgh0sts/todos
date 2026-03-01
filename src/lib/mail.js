@@ -1,14 +1,23 @@
 import nodemailer from 'nodemailer'
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT),
-  secure: true,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
+// Création du transporter uniquement si SMTP est configuré (évite les erreurs au chargement)
+function getTransporter() {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_PORT) {
+    return null
   }
-})
+  const port = parseInt(process.env.SMTP_PORT, 10)
+  if (Number.isNaN(port)) return null
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port,
+    secure: process.env.SMTP_SECURE !== 'false',
+    auth: process.env.SMTP_USER && process.env.SMTP_PASS
+      ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+      : undefined
+  })
+}
+
+const transporter = getTransporter()
 
 // Fonction pour obtenir l'URL de base de l'application
 const getBaseUrl = () => {
@@ -192,6 +201,9 @@ const createEmailTemplate = (title, emoji, content, ctaButton = null) => {
 }
 
 export const sendVerificationEmail = async (to, token) => {
+  if (!transporter) {
+    throw new Error('SMTP non configuré')
+  }
   const baseUrl = getBaseUrl()
   const verificationLink = `${baseUrl}/auth/verify?token=${token}`
   
@@ -302,6 +314,9 @@ export const sendVerificationEmail = async (to, token) => {
 
 // Fonction pour envoyer des emails d'invitation de projet
 export const sendProjectInvitationEmail = async (to, projectName, inviterName, invitationLink) => {
+  if (!transporter) {
+    throw new Error('SMTP non configuré')
+  }
   const baseUrl = getBaseUrl()
   
   console.log('📧 [Project Invitation] Envoi vers:', to)
@@ -366,6 +381,9 @@ export const sendProjectInvitationEmail = async (to, projectName, inviterName, i
 
 // Fonction pour envoyer des emails de réinitialisation de mot de passe
 export const sendPasswordResetEmail = async (to, userName, resetToken) => {
+  if (!transporter) {
+    throw new Error('SMTP non configuré')
+  }
   const baseUrl = getBaseUrl()
   const resetLink = `${baseUrl}/auth/reset-password?token=${resetToken}`
   

@@ -1,3 +1,7 @@
+// Charger .env et .env.local pour que JWT_SECRET soit le même que pour les API Next (évite point rouge Socket)
+require('dotenv').config()
+try { require('dotenv').config({ path: '.env.local', override: true }) } catch (_) {}
+
 const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
@@ -5,6 +9,14 @@ const { Server } = require('socket.io')
 const jwt = require('jsonwebtoken')
 
 const dev = process.env.NODE_ENV !== 'production'
+const JWT_SECRET = process.env.JWT_SECRET || (dev ? 'dev-secret-change-in-production' : null)
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET must be set in environment variables')
+}
+if (dev && process.env.JWT_SECRET !== JWT_SECRET) {
+  console.warn('⚠️  JWT_SECRET non défini : utilisation d\'une clé de dev. Définissez JWT_SECRET en production.')
+}
 const hostname = process.env.HOSTNAME || '0.0.0.0'
 const port = parseInt(process.env.PORT || '3000', 10)
 
@@ -81,9 +93,9 @@ app.prepare().then(() => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET)
+      const decoded = jwt.verify(token, JWT_SECRET)
       socket.userId = decoded.userId
-      socket.userName = decoded.name
+      socket.userName = decoded.name || `User ${decoded.userId}`
       next()
     } catch (err) {
       next(new Error('Token invalide'))

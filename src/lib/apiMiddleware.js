@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
-import { PrismaClient } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { logApiCall } from './apiLogger'
-
-const prisma = new PrismaClient()
+import { verifyToken } from '@/lib/auth'
 
 export function withApiLogging(handler, options = {}) {
   return async function(request, context) {
@@ -20,17 +19,16 @@ export function withApiLogging(handler, options = {}) {
       if (authHeader?.startsWith('Bearer ')) {
         const token = authHeader.substring(7)
         
-        // Vérifier si c'est un JWT (token interne) ou une clé API
-        try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        // Essayer d'abord comme JWT (token interne)
+        const decoded = verifyToken(token)
+
+        if (decoded?.userId) {
           userId = decoded.userId
-          // Si la route est explicitement marquée comme interne, garder isInternal = true
-          // Sinon, c'est une route API publique utilisée avec un JWT (donc interne)
           if (!options.isInternal) {
             isInternal = true
           }
-        } catch (jwtError) {
-          // Si ce n'est pas un JWT valide, vérifier si c'est une clé API
+        } else {
+          // Sinon, essayer comme clé API
           const apiKey = await prisma.apiKey.findUnique({
             where: { key: token, active: true },
             include: { user: true }
@@ -39,9 +37,8 @@ export function withApiLogging(handler, options = {}) {
           if (apiKey) {
             userId = apiKey.userId
             apiKeyId = apiKey.id
-            isInternal = false // Les clés API sont toujours externes
+            isInternal = false
             
-            // Mettre à jour la dernière utilisation de la clé API
             await prisma.apiKey.update({
               where: { id: apiKey.id },
               data: { lastUsed: new Date() }
@@ -110,76 +107,40 @@ export async function getAuthenticatedUser(request) {
   console.log('🔍 [Auth Middleware] Token extrait, longueur:', token.length)
   
   try {
-    // Vérifier les variables d'environnement
-    if (!process.env.JWT_SECRET) {
-      console.error('❌ [Auth Middleware] JWT_SECRET manquant dans les variables d\'environnement')
-      return { error: 'Configuration serveur incorrecte', status: 500 }
-    }
-    
     console.log('🔍 [Auth Middleware] Tentative de vérification JWT')
     
-    // Essayer d'abord comme JWT (token interne)
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    console.log('✅ [Auth Middleware] JWT décodé avec succès:', { userId: decoded.userId })
-    
-    // Vérifier la connexion à la base de données
-    try {
-      await prisma.$connect()
-      console.log('✅ [Auth Middleware] Connexion à la base de données établie')
-    } catch (dbError) {
-      console.error('❌ [Auth Middleware] Erreur de connexion à la base de données:', dbError)
-      return { error: 'Erreur de connexion à la base de données', status: 500 }
-    }
-    
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }
-    })
-    
-    if (!user) {
-      console.error('❌ [Auth Middleware] Utilisateur non trouvé pour l\'ID:', decoded.userId)
-      return { error: 'Utilisateur non trouvé', status: 404 }
-    }
-    
-    console.log('✅ [Auth Middleware] Utilisateur trouvé:', { userId: user.id, userName: user.name })
-    return { user, isInternal: true }
-    
-  } catch (jwtError) {
-    console.log('⚠️ [Auth Middleware] Échec de la vérification JWT, tentative avec clé API:', jwtError.message)
-    
-    // Si ce n'est pas un JWT, essayer comme clé API
-    try {
-      // Vérifier la connexion à la base de données si pas déjà fait
-      try {
-        await prisma.$connect()
-        console.log('✅ [Auth Middleware] Connexion à la base de données établie pour clé API')
-      } catch (dbError) {
-        console.error('❌ [Auth Middleware] Erreur de connexion à la base de données:', dbError)
-        return { error: 'Erreur de connexion à la base de données', status: 500 }
-      }
-      
-      const apiKey = await prisma.apiKey.findUnique({
-        where: { key: token, active: true },
-        include: { user: true }
+    const decoded = verifyToken(token)
+
+    if (decoded?.userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId }
       })
       
-      if (!apiKey) {
-        console.error('❌ [Auth Middleware] Clé API invalide ou inactive')
-        return { error: 'Clé API invalide', status: 401 }
+      if (!user) {
+        console.error('❌ [Auth Middleware] Utilisateur non trouvé pour l\'ID:', decoded.userId)
+        return { error: 'Utilisateur non trouvé', status: 404 }
       }
       
-      console.log('✅ [Auth Middleware] Clé API valide trouvée:', { userId: apiKey.user.id, userName: apiKey.user.name })
-      return { user: apiKey.user, apiKey, isInternal: false }
-      
-    } catch (apiError) {
-      console.error('❌ [Auth Middleware] Erreur lors de la vérification de la clé API:', apiError)
-      return { error: 'Erreur d\'authentification', status: 401 }
+      console.log('✅ [Auth Middleware] Utilisateur trouvé:', { userId: user.id, userName: user.name })
+      return { user, isInternal: true }
     }
-  } finally {
-    try {
-      await prisma.$disconnect()
-      console.log('✅ [Auth Middleware] Déconnexion de la base de données')
-    } catch (disconnectError) {
-      console.error('⚠️ [Auth Middleware] Erreur lors de la déconnexion:', disconnectError)
+    
+    console.log('⚠️ [Auth Middleware] JWT invalide, tentative avec clé API')
+    
+    const apiKey = await prisma.apiKey.findUnique({
+      where: { key: token, active: true },
+      include: { user: true }
+    })
+    
+    if (!apiKey) {
+      console.error('❌ [Auth Middleware] Clé API invalide ou inactive')
+      return { error: 'Clé API invalide', status: 401 }
     }
+    
+    console.log('✅ [Auth Middleware] Clé API valide trouvée:', { userId: apiKey.user.id, userName: apiKey.user.name })
+    return { user: apiKey.user, apiKey, isInternal: false }
+  } catch (apiError) {
+    console.error('❌ [Auth Middleware] Erreur lors de la vérification d\'authentification:', apiError)
+    return { error: 'Erreur d\'authentification', status: 401 }
   }
 } 
