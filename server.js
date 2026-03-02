@@ -53,7 +53,9 @@ const allowedOrigins = dev
       process.env.NEXT_PUBLIC_APP_URL,
       process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
       'https://todo.chghosts.fr',
-      'https://www.todo.chghosts.fr'
+      'https://www.todo.chghosts.fr',
+      'https://collabwave.chghosts.fr',
+      'https://www.collabwave.chghosts.fr'
     ].filter(Boolean)
 
 const app = next({ dev, hostname, port })
