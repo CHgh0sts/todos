@@ -17,7 +17,7 @@ if (!JWT_SECRET) {
 if (dev && process.env.JWT_SECRET !== JWT_SECRET) {
   console.warn('⚠️  JWT_SECRET non défini : utilisation d\'une clé de dev. Définissez JWT_SECRET en production.')
 }
-const hostname = process.env.HOSTNAME || '0.0.0.0'
+const hostname = '0.0.0.0'
 const port = parseInt(process.env.PORT || '3000', 10)
 
 // Fonction pour obtenir l'IP locale
